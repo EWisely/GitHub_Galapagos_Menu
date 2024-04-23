@@ -400,8 +400,6 @@ global_to_local_assigment
 #516 taxa updated from existing global assignments
 
 
-#When global is the database instead of local, use the LCA between global and local as preferred name, and the lower pctid (local), as the preferred_pctid----
-
 #LCA of global and local ID'ed taxa-----
 #need the taxonomizr database to be already prepared
 meta_lca_best_ID_fish_combined<-lca_best_ID_fish_combined%>%
@@ -451,11 +449,110 @@ condensed_lca_global_vs_local<-condensed_lca_global_vs_local%>%
 
 #add global_v_local_lca_name column to lca_best_ID_fish_combined
 
-#assign global_v_local_lca_name to preferred name when global scores higher than local
+lca_global_vs_local_assignments<-condensed_lca_global_vs_local%>%
+  select(ID,global_v_local_lca_name)
+
+lca_best_ID_fish_combined<-full_join(lca_best_ID_fish_combined, lca_global_vs_local_assignments, by ="ID")
+
+#When global is the database instead of local, use the LCA between global and local as preferred name, and the lower pctid (local), as the preferred_pctid----
+
+double_lca_best_ID_fish_combined<-lca_best_ID_fish_combined%>%
+  mutate(preferred_pctid =
+           if_else(global_pctid > local_pctid, 
+                   local_pctid, 
+                   local_pctid))%>%
+  mutate(preferred_name=
+           if_else(global_pctid > local_pctid, 
+                   global_v_local_lca_name, 
+                   lca_name))%>%
+  mutate(database=
+           if_else(global_pctid > local_pctid,
+                   "lca_global_v_local",
+                   "local"))
+
+
+
+
+
+#put the global names and reassignments in a new dataframe
+global_preferred_assignments<-double_lca_best_ID_fish_combined%>%
+  filter(database=="lca_global_v_local")
+
+#print global_preferred_assignments to a csv file to maybe use as supplement.
+write.csv(global_preferred_assignments, "MiFish_output/global_preferred_assignments_after_final_LCA.csv")
 
 
 
 #re-summarize changes after LCA of global vs. local.  Now all should be local.-----
+
+#count how many got assigned to local vs. global and number of unassigned.
+
+#total ASVs
+total_ASVs=nrow(obi_fish95)
+total_ASVs
+#to make sure we didn't lose any
+final_ASVs=nrow(double_lca_best_ID_fish_combined)
+final_ASVs
+#1438
+
+#Updated number of total ASVs assigned to a taxon
+assigned<-nrow(double_lca_best_ID_fish_combined[is.na(double_lca_best_ID_fish_combined$database) ==FALSE, ])
+assigned
+#790
+
+#Percent of all ASVs assigned to a taxon after combining vsearch and obitools
+(assigned/nrow(double_lca_best_ID_fish_combined))*100
+#54.93741
+
+#compared to just obitools
+obi_assigned<-nrow(double_lca_best_ID_fish_combined[is.na(double_lca_best_ID_fish_combined$SCIENTIFIC_NAME) ==FALSE, ])
+obi_assigned
+#542
+
+#this is an increase in assignment of 248 ASVs
+assigned - obi_assigned
+#248
+
+
+lca_vsearch_assigned<-nrow(double_lca_best_ID_fish_combined[is.na(double_lca_best_ID_fish_combined$lca_name) ==FALSE, ])
+lca_vsearch_assigned
+#790
+
+#After comparing the taxonomic assignments of global and local to get preferred names----
+
+#count the number of times the global database was used for the preferred assignment
+lca_global_v_local_assigned<-nrow(double_lca_best_ID_fish_combined[double_lca_best_ID_fish_combined$database == 'lca_global_v_local'& is.na(double_lca_best_ID_fish_combined$database) ==FALSE, ])
+
+lca_global_v_local_assigned
+#26
+
+globally_assigned<-nrow(double_lca_best_ID_fish_combined[double_lca_best_ID_fish_combined$database == 'global'& is.na(double_lca_best_ID_fish_combined$database) ==FALSE, ])
+
+globally_assigned
+#0
+
+
+#count the number of times the local database was used for the preferred assignment
+locally_assigned<-nrow(double_lca_best_ID_fish_combined[double_lca_best_ID_fish_combined$database == 'local'& is.na(double_lca_best_ID_fish_combined$database) ==FALSE, ])
+locally_assigned
+
+#764
+#percentage of all ASVs
+(locally_assigned/nrow(double_lca_best_ID_fish_combined))*100
+#53.129%
+
+#percentage of identified sequences
+(locally_assigned/assigned)*100
+#96.70886%
+
+
+#number of occurences where local assignment changed the existing global assignment
+global_to_local_assigment<-nrow(double_lca_best_ID_fish_combined[double_lca_best_ID_fish_combined$database == 'local'& is.na(double_lca_best_ID_fish_combined$SCIENTIFIC_NAME) ==FALSE, ])
+global_to_local_assigment
+#516 taxa updated from existing global assignments
+
+
+
 
 
 # Make new motu (taxa) table for MetabaR ----
@@ -465,15 +562,35 @@ library(metabaR)
 library(taxonomizr)
 prepareDatabase('accessionTaxa.sql')
 
-acc<-best_ID_fish_combined$NCBI_ACC[!is.na(best_ID_fish_combined$NCBI_ACC)]
-print(acc)
+final_names<-double_lca_best_ID_fish_combined$preferred_name
 
+final_taxaId<-getId(fish_names,'accessionTaxa.sql')
+print(final_taxaId)
 
-taxaId<-accessionToTaxa(accessions = acc, sqlFile ="accessionTaxa.sql", version = "version")
-getTaxonomy(taxaId,'accessionTaxa.sql')
-#put this info into best_ID_fish_combined as more columns matching on acc 
-#mutate a new column with preferred_TAXID if_else local>global etc.
+final_taxa<-getTaxonomy(final_taxaId,'accessionTaxa.sql')
+print(final_taxa)
+class(final_taxa)
+
+#make a new dataframe with the final taxa
+
+final_taxa<-as.data.frame(final_taxa)
+IDs<-double_lca_best_ID_fish_combined$ID
+
+rownames(final_taxa)<-IDs
+
+nrow(final_taxa)
+#1438
+
 #select only the columns I want for metabaR and rename them (lowercase sequence) taking out "preferred" for brevity.
+final_taxa$pct_id<-double_lca_best_ID_fish_combined$preferred_pctid
+
+final_taxa$lca_name<-final_names
+final_taxa$taxID<-final_taxaId
+final_taxa$ASV<-IDs
+final_taxa$sequence<-double_lca_best_ID_fish_combined$Sequence
+
+class(final_taxa)
+write.csv(final_taxa,"../06_local_vs_global_results/MiFish_Menu_ready_for_MetabaR.csv")
 
 
 
@@ -482,9 +599,6 @@ getTaxonomy(taxaId,'accessionTaxa.sql')
 
 
 
-#create a TRUE or FALSE vector if the number two is in list A answer by julius-vainora on https://stackoverflow.com/questions/53086053/how-to-check-if-a-list-contains-a-certain-element-in-r
-
-#sapply(A, `%in%`, x = 2)
 
 #ooh!  neat!
 #https://ropensci.org/blog/2017/01/25/obis/
