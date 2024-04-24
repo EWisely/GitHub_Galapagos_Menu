@@ -101,15 +101,3 @@ percent_locally_present<-sum(local_usearch_fish[,6])/nrow(local_usearch_fish)
 percent_locally_present
 #0.9927326
 
-
-
-
-
-
-       
-       
-       
-       #select mo.*, ma.*,  -- better enumerate the columns you want here
-#exists (select 1 from modeles_scrape ms where ms.marque = ma.display_name ) as isactive
-#from modeles  mo
-#inner join marques ma using(marque_id)

@@ -514,6 +514,10 @@ Species_obis_gbif_darwin_galcrust<-Species_obis_gbif_darwin_galcrust%>%
 #order alphabetically
 Species_obis_gbif_darwin_galcrust$Species<- Species_obis_gbif_darwin_galcrust$Species[order(Species_obis_gbif_darwin_galcrust$Species)]
 
+
+
+
+
 Species_obis_gbif_darwin_galfish<-unique(rbind(obis_galfish_species,GBIF_Gal_fish_species, Darwin_fish_species))
 Species_obis_gbif_darwin_galfish<-Species_obis_gbif_darwin_galfish%>%
   filter(Species!="NA")
@@ -521,63 +525,16 @@ Species_obis_gbif_darwin_galfish<-Species_obis_gbif_darwin_galfish%>%
 #order alphabetically
 Species_obis_gbif_darwin_galfish$Species<- Species_obis_gbif_darwin_galfish$Species[order(Species_obis_gbif_darwin_galfish$Species)]
 
-#Write Fish list to a txt file to use as CRABS input
+##Write Fish list to a txt file to use as CRABS input----
 
 write_delim(Species_obis_gbif_darwin_galfish, "../custom_db/comprehensive_galapagos_fish_list.txt", delim = '\t', col_names = FALSE)
 nrow(Species_obis_gbif_darwin_galfish)
 #1147
 
-#download matches by name and mitochondrion or mitochondrial with CRABS
-#read in CRABS download results
-CRABS_ncbi_mito<-read_delim(file = "../custom_db/combo_db_ncbi_mito.txt", col_names = c("bytes","Species"))
-nrow(CRABS_ncbi_mito)
-#1147
 
-#number that had mito sequences in NCBI
-ncbi_galfish_mito<-CRABS_ncbi_mito%>%
-  filter(bytes>0)
+##Write Crustaceans list to a txt file to use as CRABS input----
 
-nrow(ncbi_galfish_mito)
+write_delim(Species_obis_gbif_darwin_galcrust, "../custom_db/comprehensive_galapagos_crustaceans_list.txt", delim = '\t', col_names = FALSE)
+nrow(Species_obis_gbif_darwin_galcrust)
+#4498
 
-#874
-
-#order alphabetically
-ncbi_galfish_mito$Species<- ncbi_galfish_mito$Species[order(ncbi_galfish_mito$Species)]
-
-ncbi_galfish_mito_list<-ncbi_galfish_mito%>%
-  select(Species)
-
-#Write Fish list of only ones with NCBI results to a txt file to use as CRABS input with keep original flag =yes
-
-write_delim(ncbi_galfish_mito_list, "../custom_db/comprehensive_galapagos_fish_list_ncbi.txt", delim = '\t', col_names = FALSE)
-
-# continue summary statistics
-
-#percent of names in the list with mito results
-(nrow(ncbi_galfish_mito)/nrow(CRABS_ncbi_mito))*100
-#76.19878 %
-
-#get list of names not present in NCBI database
-no_mito_match<-CRABS_ncbi_mito%>%
-  filter(bytes==0)
-
-nrow(no_mito_match)
-#273
-
-
-
-
-
-
-
-
-# devtools::install_github("cfree14/freeR")
-# library(freeR)
-# devtools::install_github("james-thorson/FishLife")
-# 
-# suggest_names(species)
-# 
-# 
-# 
-# #Sys.setenv(FISHBASE_API="sealifebase")
-# valid_names_galapagos_crustaceans<-validate_names(Species_obis_gbif_darwin_galcrust$Species)
