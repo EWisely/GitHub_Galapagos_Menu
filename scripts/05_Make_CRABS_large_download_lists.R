@@ -35,7 +35,7 @@ write_delim(ncbi_galfish_mito_list, "../custom_db/comprehensive_galapagos_fish_l
 
 # continue summary statistics
 
-#percent of names in the list with mito results
+#percent of names in the list with 'mitochondrion' results
 (nrow(ncbi_galfish_mito)/nrow(CRABS_ncbi_mito))*100
 #76.19878 %
 
@@ -161,5 +161,46 @@ nrow(crust_no_16S_match)
 
 
 # total crustacean list statistics
+ncbi_hits_16Sandlsu<-unique(inner_join(ncbi_galcrust_16S_list,ncbi_galcrust_lsu_list, "Species"))
+nrow(ncbi_hits_16Sandlsu)
+#550
+
+passing_insilico<-read_delim("../custom_db/Sequences_passing_insilico.txt", col_names = FALSE)
+
+passing_insilico<-passing_insilico%>%
+  mutate(Genus=
+           if_else(X2=="UNVERIFIED:",
+                   X3,
+                   X2))%>%
+  mutate(species=
+           if_else(X2=="UNVERIFIED:",
+                   X4,
+                   X3))%>%
+  mutate(Species=
+           paste(Genus,species))
+  
+ncbi_hits_mito_after_insilico<-passing_insilico%>%
+  select(Species)
+
+ncbi_species<-unique(rbind(ncbi_hits_16Sandlsu,ncbi_hits_mito_after_insilico))
+nrow(ncbi_species)
+#712 species
+
+#percent of total list found in database
+Species_obis_gbif_darwin_galcrust<-read_delim("../custom_db/comprehensive_galapagos_crustaceans_list.txt", delim = '\t', col_names = "Species")
+nrow(Species_obis_gbif_darwin_galcrust)
+unique_gal_species<-unique(Species_obis_gbif_darwin_galcrust)
+nrow(unique_gal_species)
+#4498 total
+
+#percent of database names (not considering potential for multiple names) that made it into the database at this stage.
+(nrow(ncbi_species)/nrow(unique_gal_species))*100
+#15.82926
+
+#improvement by adding insilico mito search
+nrow(ncbi_species)-nrow(ncbi_hits_16Sandlsu)
+#162 species
+
+
 
 
