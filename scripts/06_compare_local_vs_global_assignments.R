@@ -283,7 +283,6 @@ getTaxonomy(taxaId,'accessionTaxa.sql')
 
 
 
-
 #VSEARCH combine results of obitools and vsearch_global with lca------
 
 #join by ID column
@@ -302,7 +301,7 @@ lca_fish_combined<-lca_fish_combined%>%
 
 lca_best_ID_fish_combined<-lca_fish_combined%>%
   mutate(local_pctid=
-           if_else(vsearch_pctid=="NA",
+           if_else(is.na(vsearch_pctid),
                    0,
                    vsearch_pctid))%>%
   mutate(global_pctid=
