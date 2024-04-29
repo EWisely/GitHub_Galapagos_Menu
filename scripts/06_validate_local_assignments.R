@@ -78,6 +78,7 @@ unique_genuses<-vsearch_results_all_matches%>%
 nrow(unique_genuses)
 #44 including NA
 
+
 #VSEARCH combine results of obitools and vsearch_global with lca------
 
 #join by ID column
@@ -195,6 +196,15 @@ global_to_local_assigment
 #480 taxa updated from existing global assignments
 
 
+#number of unique taxa after choosing the best assignment between global and local:
+
+summary_best_ID_combined<-best_ID_combined%>%
+  summarise(n_globally_IDed_taxa= n_distinct(SCIENTIFIC_NAME),
+            n_locally_IDed_taxa= n_distinct(lca_name),
+            n_combined_IDed_taxa= n_distinct(preferred_name)
+
+)
+  
 #LCA of global and local ID'ed taxa-----
 #need the taxonomizr database to be already prepared
 meta_best_ID_combined<-best_ID_combined%>%
@@ -249,11 +259,29 @@ lca_global_vs_local_assignments<-condensed_lca_global_vs_local%>%
 
 best_ID_combined<-full_join(best_ID_combined, lca_global_vs_local_assignments, by ="ID")
 
+#after visually looking at best_ID_combined for local database sequences that were assigned to very different taxa by global and local databases, and even within the local database assignments (phylum only dataframe), there were over 3,000 sequences that matched to Calanus sinicus with a few HQ619236 HQ619232 HQ619230 HQ619237 HQ619234 HQ619232 HQ619231 HQ619235 HQ619228 from the same study.  I'll check these sequences in the database file to see what's going on.  I also need to remove nans from the database file. #3214 Calanus sinicus sequences, #41 ASVs reduced ID to eukaryota after global_v_local lca step.  Also remove d:Bacteria, and check MT872704, MT672041
+
+#re-ran this code with the new cleaned vsearch local database file results and nothing was phylum only!  the best_ID_combined file looks like they're converging on genus level agreements now too!
+
+#updated database resulted in #440 taxa updated from existing global assignments (down from 480), 44.11474% locally assigned sequences (out of assigned sequences), 3.94% of all ASVs, 446 ASVs had greater or equal percent ID as the global database and were therefore preferred (down from 3738 (although 3214 of those were Calanus sinicus problematic sequences, likely with lots of Ns)), 55% of assigned ASVs are still from the global database, 4.9% of all ASVs.
+#6 ASVs were assigned locally that had no assignment with the global obitools database.
+
+
+#This can happen with a ver incomplete local database.  Next steps:
+
+
 #Compare the global taxonomic assignments and the local species list----
 
-#When global is still the preferred assignment after comparing pctid, find the genus or family in the local database and reduce the ID to that level.
 
+#When global is still the preferred assignment after comparing pctid, and global_v_local LCA name is NA, find the genus or family in the local database and reduce the ID to that level.
 
+#make a SCIENTIFIC_GENUS column from SCIENTIFIC_NAME, and if SCIENTIFIC_GENUS is found in the local database checklist ("../custom_db/comprehensive_galapagos_crustaceans_list.txt", or "../custom_db/comprehensive_galapagos_fish_list.txt") then, put the genus in local_relation column.  
+
+#read in the comprehensive local checklist and isolate the genus column
+local_checklist<-read.csv("../custom_db/comprehensive_galapagos_crustaceans_list.txt", header = FALSE)
+
+local_genuses<-local_checklist%>%
+  separate(V1, into = c("local_genus", "local_species"), sep=" ")
 
 
 
