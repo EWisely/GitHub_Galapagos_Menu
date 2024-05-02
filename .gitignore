@@ -7,3 +7,4 @@
 *.sqlite
 *.dmp
 *.gz
+lulu.log*

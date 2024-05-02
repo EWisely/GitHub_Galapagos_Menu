@@ -117,7 +117,7 @@ obis_tepcrust_taxa<-obis_tepcrust%>%
 
 
 #### Find GBIF keys for crustaceans ####
-#Find list of Classses within Crustacea subphylum
+#Find list of Classes within Crustacea subphylum
 #Worms (World Register of Marine Species)
 worrms::wm_name2id(name = "Crustacea")
 #1066
