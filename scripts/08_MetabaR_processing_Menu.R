@@ -27,7 +27,7 @@ library(colorRamps)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"BerryCrust"
+Primer<-"MiFish"
 
 
 #Import Metabarlist----
@@ -764,13 +764,14 @@ if (Primer=="MiFish"){
 
 #save intermediate files for each primer----
 
-write.csv(Menu_clean_agg$reads, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_reads.csv",sep=""))
-write.csv(Menu_clean_agg$motus, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_motus.csv",sep=""))
-write.csv(Menu_clean_agg$pcrs, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_pcrs.csv",sep=""))
-write.csv(Menu_clean_agg$samples, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_samples.csv",sep=""))
+write.csv(Menu_clean$reads, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_reads.csv",sep=""))
+write.csv(Menu_clean$motus, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_motus.csv",sep=""))
+write.csv(Menu_clean$pcrs, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_pcrs.csv",sep=""))
+write.csv(Menu_clean$samples, paste("../07_lulu_metabar/",Primer,"_Metabar_cleaned_samples.csv",sep=""))
 
 summary_metabarlist(Menu_clean_agg)
 summary_metabarlist(Menu_clean1)
+summary_metabarlist(Menu_clean)
 
 saveRDS(Menu_clean_agg, file=paste("../07_lulu_metabar/",Primer,"_Menu_Clean_Metabarlist.rds",sep=""))
 

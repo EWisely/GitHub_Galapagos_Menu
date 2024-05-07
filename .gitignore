@@ -8,3 +8,5 @@
 *.dmp
 *.gz
 lulu.log*
+BerryCrust_output/
+MiFish_output/

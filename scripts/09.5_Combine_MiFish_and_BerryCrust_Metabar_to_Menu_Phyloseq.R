@@ -13,42 +13,87 @@ library(metabaR)
 library(phyloseq)
 library(adegenet)
 library(ape)
-#library(phangorn)
+library(msa)
 
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"MiFish"
+Primer1<-"MiFish"
+Primer2<-"BerryCrust"
 
 
-#Import Metabarlist----
-Menu<-readRDS(file= paste("../07_lulu_metabar/",Primer,"_Menu_Clean_Metabarlist.rds", sep = ""))
+#Import Metabarlist intermediary files----
 
-# Compute the number of reads per pcr
-Menu$pcrs$nb_reads <- rowSums(Menu$reads)
+##Primer1 = MiFish----
 
-# Compute the number of motus per pcr
-Menu$pcrs$nb_motus <- rowSums(Menu$reads>0)
+df.MiFish_Menu_reads<-read.csv(paste("../07_lulu_metabar/",Primer1,"_Metabar_cleaned_reads.csv",sep=""))
+df.MiFish_Menu_motus<-read.csv(paste("../07_lulu_metabar/",Primer1,"_Metabar_cleaned_motus.csv",sep=""))
+df.MiFish_Menu_pcrs<-read.csv(paste("../07_lulu_metabar/",Primer1,"_Metabar_cleaned_pcrs.csv",sep=""))
+df.MiFish_Menu_samples<-read.csv(paste("../07_lulu_metabar/",Primer1,"_Metabar_cleaned_samples.csv",sep=""))
 
-#subset the metabarlist to all PCRs with more than 0 reads
-Menu <- subset_metabarlist(Menu, table = "pcrs",
-                           indices = Menu$pcrs$nb_reads>0)
-summary_metabarlist(Menu)
+##Primer2 = BerryCrust----
 
-#Export Fasta for alignment to make phylogeny----
+df.BerryCrust_Menu_reads<-read.csv(paste("../07_lulu_metabar/",Primer2,"_Metabar_cleaned_reads.csv",sep=""))
+df.BerryCrust_Menu_motus<-read.csv(paste("../07_lulu_metabar/",Primer2,"_Metabar_cleaned_motus.csv",sep=""))
+df.BerryCrust_Menu_pcrs<-read.csv(paste("../07_lulu_metabar/",Primer2,"_Metabar_cleaned_pcrs.csv",sep=""))
+df.BerryCrust_Menu_samples<-read.csv(paste("../07_lulu_metabar/",Primer2,"_Metabar_cleaned_samples.csv",sep=""))
 
- fasta_generator(
-   Menu,
-   id = rownames(Menu$motus),
-   output_file = paste0("../09_Metabar_to_Phyloseq/",Primer,"_Cleaned.fasta"),
-   annotation = NULL,
-   annot_sep = ";"
- )
-
-#Read fasta into Geneious Prime and align and export tree file----
+### Merge reads tables----
+df.Menu_merged.reads<-full_join(df.MiFish_Menu_reads,df.BerryCrust_Menu_reads)
+### Export to a new .csv
+df.Menu_merged.reads<-column_to_rownames(df.Menu_merged.reads, var = "X")
+write.csv(df.Menu_merged.reads, "../09_Metabar_to_Phyloseq/Menu_merged_reads.csv")
 
 
-#Put Metabar object into Phyloseq format----
+### Merge motus tables----
+df.Menu_merged.motus<-full_join(df.MiFish_Menu_motus,df.BerryCrust_Menu_motus)
+### Export to a new .csv
+df.Menu_merged.motus<-column_to_rownames(df.Menu_merged.motus, var = "X")
+write.csv(df.Menu_merged.motus, "../09_Metabar_to_Phyloseq/Menu_merged_motus.csv")
+
+### Merge pcrs tables----
+
+df.Menu_merged.pcrs<-full_join(df.MiFish_Menu_pcrs,df.BerryCrust_Menu_pcrs, by = c("X","sample_id","rep","type","control_type","Site_Name","Microhabitat"))
+### Export to a new .csv
+df.Menu_merged.pcrs<-column_to_rownames(df.Menu_merged.pcrs, var = "X")
+write.csv(df.Menu_merged.pcrs, "../09_Metabar_to_Phyloseq/Menu_merged_pcrs.csv")
+
+
+### Merge samples tables ----
+
+
+
+df.Menu_merged.samples<-union_all(df.MiFish_Menu_samples,df.BerryCrust_Menu_samples)
+
+df.Menu_merged.samples<-df.Menu_merged.samples %>% distinct(X, .keep_all = TRUE)
+
+df.Menu_merged.samples<-column_to_rownames(df.Menu_merged.samples, var="X")
+
+write.csv(df.Menu_merged.samples, "../09_Metabar_to_Phyloseq/Menu_merged_samples.csv")
+
+
+
+#bring the full fish and crustacean dataset back into MetabaR.
+Menu_Combined<-tabfiles_to_metabarlist(
+  file_reads= "../09_Metabar_to_Phyloseq/Menu_merged_reads.csv",
+  file_motus="../09_Metabar_to_Phyloseq/Menu_merged_motus.csv",
+  file_pcrs ="../09_Metabar_to_Phyloseq/Menu_merged_pcrs.csv",
+  file_samples ="../09_Metabar_to_Phyloseq/Menu_merged_samples.csv",
+  files_sep = ","
+)
+
+### make a combined fasta file ----
+
+fasta_generator(
+  Menu_Combined,
+  id = rownames(Menu_Combined$motus),
+  output_file = paste0("../09_Metabar_to_Phyloseq/Menu_Combined.fasta"),
+  annotation = NULL,
+  annot_sep = ";"
+)
+
+
+#Put Merged Metabar object into Phyloseq format----
 
 
 #Phyloseq!
@@ -61,13 +106,13 @@ summary_metabarlist(Menu)
 
 ##otu table----
 
-clean.otu.df<-as.data.frame(t(Menu$reads))
+clean.otu.df<-as.data.frame(t(Menu_Combined$reads))
 clean.otu.df<-rownames_to_column(clean.otu.df, var="id")
 
 
 ##taxa table----
 
-clean.taxa.df<-as.data.frame(Menu$motus)
+clean.taxa.df<-as.data.frame(Menu_Combined$motus)
 clean.taxa.df<-rownames_to_column(clean.taxa.df, var="id")
 taxa.df<-clean.taxa.df%>%
   select(id, superkingdom, phylum, class, order,family,genus,species)
@@ -75,19 +120,21 @@ taxa.df<-clean.taxa.df%>%
 
 ##samples table----
 
-clean.samples.df<-as.data.frame(Menu$samples)
+clean.samples.df<-as.data.frame(Menu_Combined$samples)
 clean.samples.df<-rownames_to_column(clean.samples.df, var ="sample_id")
 
-clean.pcrs.df<-Menu$pcrs
+clean.pcrs.df<-Menu_Combined$pcrs
+clean.pcrs.df<-rownames_to_column(clean.pcrs.df, var="sample")
 
-samples.df<-full_join(clean.pcrs.df,clean.samples.df, by="sample_id")
+
+#Before I can do this I need to either aggregate the PCRs again... or combine by PCR name instead of sample name
+
+
+samples.df<-full_join(clean.pcrs.df,clean.samples.df, by=c("sample_id","Site_Name","Microhabitat"))
 
 
 samples.df <- samples.df %>% 
-  tibble::column_to_rownames("sample_id")%>%
-  select(-c(Site_Name.x,Microhabitat.x))%>%
-  dplyr::rename(Site_Name ="Site_Name.y")%>%
-  dplyr::rename(Microhabitat ="Microhabitat.y")
+  tibble::column_to_rownames("sample")
 
 
 ##make otu matrix----
@@ -99,29 +146,24 @@ clean.otu.mat<-as.matrix(clean.otu.df)
 taxa.df<-column_to_rownames(taxa.df, var="id")
 clean.taxa.mat<-as.matrix(taxa.df)
 
-##phy_tree ----
-
-newick<-read_tree(paste0("../09_Metabar_to_Phyloseq/",Primer,"_Cleaned Alignment Clustal Omega FastTree Tree.newick"))
-
 
 ##ASV sequences ----
 library(msa)
-Seqs <- readDNAStringSet(paste0("../09_Metabar_to_Phyloseq/",Primer,"_Cleaned.fasta"))
+Seqs <- readDNAStringSet(paste0("../09_Metabar_to_Phyloseq/Menu_Combined.fasta"))
 
 
 #Put them together into a phyloseq object
-Menu.ps<- phyloseq(otu_table(clean.otu.mat, taxa_are_rows = TRUE), 
+Menu_Combined.ps<- phyloseq(otu_table(clean.otu.mat, taxa_are_rows = TRUE), 
                          sample_data(samples.df), 
                          tax_table(clean.taxa.mat),
-                          phy_tree(newick),
                           refseq(Seqs))
 
 
 
-Menu.ps
+Menu_Combined.ps
 
 
-saveRDS(Menu.ps, file=paste("../09_Metabar_to_Phyloseq/",Primer,"_Phyloseq.rds",sep=""))
+saveRDS(Menu_Combined.ps, file=paste("../09_Metabar_to_Phyloseq/Menu_Combined_Phyloseq.rds",sep=""))
 
-print(paste0("Finished creating a Phyloseq object out of ",Primer," Metabarlist!"))
+print(paste0("Finished creating a Phyloseq object out of Combined Metabarlist!"))
 
