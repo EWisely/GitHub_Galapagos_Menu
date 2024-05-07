@@ -7,7 +7,7 @@ library(prettyunits)
 library(taxonomizr)
 
 #set variables
-Primer ="BerryCrust"
+Primer ="MiFish"
 
  
 Local_advantage=TRUE #default is TRUE

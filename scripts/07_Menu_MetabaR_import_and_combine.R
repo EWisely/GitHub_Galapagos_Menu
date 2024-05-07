@@ -19,7 +19,7 @@ library(phyloseq)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"BerryCrust"
+Primer<-"MiFish"
 
 
 #Read in named tab file of ASV counts from obitools and cleaned of all extraneous columns

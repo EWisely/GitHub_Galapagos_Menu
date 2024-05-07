@@ -27,7 +27,7 @@ library(colorRamps)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"MiFish"
+Primer<-"BerryCrust"
 
 
 #Import Metabarlist----

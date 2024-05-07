@@ -18,7 +18,7 @@ library(ape)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"BerryCrust"
+Primer<-"MiFish"
 
 
 #Import Metabarlist----
