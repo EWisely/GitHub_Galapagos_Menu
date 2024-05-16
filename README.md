@@ -9,11 +9,13 @@ The problem: incomplete (and uncurated) reference DNA databases used for taxonom
 #Global database (all vertebrates when assigning fish or all invertebrates when assigning crustacean sequences for example):
 
 Global_Pros <- c("likely to at least match relative when the local isn't sequenced", "most completeness possible", "unbiased (least bias anyway)")
+
 Global_Cons <- c("likely to get a matching relative when the local isn't sequenced", "that's a lot of invasive species!","local species added to the database are filtered out by a common database cleaning step")
 
 #Local database (sequences downloaded from the global database (NCBI in this case) matching the local species checklist -from script 04):
 
 Local_Pros <- c("no invasive species", "the problematic local database cleaning step can be left out of the CRABS workflow")
+
 Local_Cons <- c("when the local species has not been sequenced the result is "NA", "different results for different species checklists", "local assignments may be overreaching the limitations of the method -low primer specificity could result in all members of a genus matching equally to the query sequence")
 
 #By combining the results of both methods and comparing them methodically to choose the best assignment database for each sequence, we can have a cross-validated taxonomic assignment of the eDNA sequences which can take advantage of the pros of each method and mitigate the cons.  
