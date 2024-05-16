@@ -1,6 +1,6 @@
 #Eldridge Wisely
 #Date: 4-30-24
-#Export fasta for alignment, Create Phyloseq objects from individual Metabar objects
+#Create Combined Metabarlist from individual Metabar objects from two primer sets. and then create a combined Phyloseq object from the combined Metabar object. (No phylo tree in the object) 
 
 #library("ggplot2")      # graphics
 #library("readxl")       # necessary to import the data from Excel file
@@ -73,7 +73,7 @@ write.csv(df.Menu_merged.samples, "../09_Metabar_to_Phyloseq/Menu_merged_samples
 
 
 
-#bring the full fish and crustacean dataset back into MetabaR.
+#bring the full fish and crustacean dataset back into MetabaR.----
 Menu_Combined<-tabfiles_to_metabarlist(
   file_reads= "../09_Metabar_to_Phyloseq/Menu_merged_reads.csv",
   file_motus="../09_Metabar_to_Phyloseq/Menu_merged_motus.csv",
@@ -164,6 +164,210 @@ Menu_Combined.ps
 
 
 saveRDS(Menu_Combined.ps, file=paste("../09_Metabar_to_Phyloseq/Menu_Combined_Phyloseq.rds",sep=""))
+
+
+#Remove PCRs with zero reads and save as a new phyloseq object----
+
+# Compute the number of reads per pcr
+Menu_Combined$pcrs$nb_reads <- rowSums(Menu_Combined$reads)
+
+# Compute the number of motus per pcr
+Menu_Combined$pcrs$nb_motus <- rowSums(Menu_Combined$reads>0)
+
+#subset the metabarlist to all PCRs with more than 0 reads
+Menu_Combined1 <- subset_metabarlist(Menu_Combined, table = "pcrs",
+                           indices = Menu_Combined$pcrs$nb_reads>0)
+summary_metabarlist(Menu_Combined1)
+
+### make a combined fasta file ----
+
+fasta_generator(
+  Menu_Combined1,
+  id = rownames(Menu_Combined1$motus),
+  output_file = paste0("../09_Metabar_to_Phyloseq/Menu_Combined1.fasta"),
+  annotation = NULL,
+  annot_sep = ";"
+)
+
+
+#Put Merged Metabar object into Phyloseq format----
+
+
+#Phyloseq!
+#otu_table - Works on any numeric matrix. You must also specify if the species are rows or columns
+#sample_data - Works on any data.frame. The rownames must match the sample names in the otu_table if you plan to combine them as a phyloseq-object
+#tax_table - Works on any character matrix. The rownames must match the OTU names (taxa_names) of the otu_table if you plan to combine it with a phyloseq-object.
+#phyloseq - Takes as argument an otu_table and any unordered list of valid phyloseq components: sample_data, tax_table, phylo, or XStringSet. The tip labels of a phylo-object (tree) must match the OTU names of the otu_table, and similarly, the sequence names of an XStringSet object must match the OTU names of the otu_table.
+#merge_phyloseq - Can take any number of phyloseq objects and/or phyloseq components, and attempts to combine them into one larger phyloseq object. This is most-useful for adding separately-imported components to an already-created phyloseq object.
+
+
+##otu table----
+
+clean.otu.df<-as.data.frame(t(Menu_Combined1$reads))
+clean.otu.df<-rownames_to_column(clean.otu.df, var="id")
+
+
+##taxa table----
+
+clean.taxa.df<-as.data.frame(Menu_Combined1$motus)
+clean.taxa.df<-rownames_to_column(clean.taxa.df, var="id")
+taxa.df<-clean.taxa.df%>%
+  select(id, superkingdom, phylum, class, order,family,genus,species)
+
+
+##samples table----
+
+clean.samples.df<-as.data.frame(Menu_Combined1$samples)
+clean.samples.df<-rownames_to_column(clean.samples.df, var ="sample_id")
+
+clean.pcrs.df<-Menu_Combined1$pcrs
+clean.pcrs.df<-rownames_to_column(clean.pcrs.df, var="sample")
+
+
+#Before I can do this I need to either aggregate the PCRs again... or combine by PCR name instead of sample name
+
+
+samples.df<-full_join(clean.pcrs.df,clean.samples.df, by=c("sample_id","Site_Name","Microhabitat"))
+
+
+samples.df <- samples.df %>% 
+  tibble::column_to_rownames("sample")
+
+
+##make otu matrix----
+
+clean.otu.df<-column_to_rownames(clean.otu.df, var="id")
+clean.otu.mat<-as.matrix(clean.otu.df)
+
+#make taxa matrix
+taxa.df<-column_to_rownames(taxa.df, var="id")
+clean.taxa.mat<-as.matrix(taxa.df)
+
+
+##ASV sequences ----
+library(msa)
+Seqs <- readDNAStringSet(paste0("../09_Metabar_to_Phyloseq/Menu_Combined1.fasta"))
+
+
+#Put them together into a phyloseq object
+Menu_Combined1.ps<- phyloseq(otu_table(clean.otu.mat, taxa_are_rows = TRUE), 
+                            sample_data(samples.df), 
+                            tax_table(clean.taxa.mat),
+                            refseq(Seqs))
+
+
+
+Menu_Combined1.ps
+
+
+saveRDS(Menu_Combined1.ps, file=paste("../09_Metabar_to_Phyloseq/Menu_Combined1_Phyloseq.rds",sep=""))
+
+
+print(paste0("Finished creating a Phyloseq object out of Combined Metabarlist!"))
+
+#Merge PCRs into samples then save as a new Phyloseq object----
+
+Menu_Combined2<-aggregate_pcrs(Menu_Combined)
+
+# Compute the number of reads per pcr
+Menu_Combined2$pcrs$nb_reads <- rowSums(Menu_Combined2$reads)
+
+# Compute the number of motus per pcr
+Menu_Combined2$pcrs$nb_motus <- rowSums(Menu_Combined2$reads>0)
+
+#subset the metabarlist to all PCRs with more than 0 reads
+Menu_Combined2 <- subset_metabarlist(Menu_Combined2, table = "pcrs",
+                                     indices = Menu_Combined2$pcrs$nb_reads>0)
+summary_metabarlist(Menu_Combined2)
+
+### make a combined fasta file ----
+
+fasta_generator(
+  Menu_Combined2,
+  id = rownames(Menu_Combined2$motus),
+  output_file = paste0("../09_Metabar_to_Phyloseq/Menu_Combined2.fasta"),
+  annotation = NULL,
+  annot_sep = ";"
+)
+
+
+#Put Merged Metabar object into Phyloseq format----
+
+
+#Phyloseq!
+#otu_table - Works on any numeric matrix. You must also specify if the species are rows or columns
+#sample_data - Works on any data.frame. The rownames must match the sample names in the otu_table if you plan to combine them as a phyloseq-object
+#tax_table - Works on any character matrix. The rownames must match the OTU names (taxa_names) of the otu_table if you plan to combine it with a phyloseq-object.
+#phyloseq - Takes as argument an otu_table and any unordered list of valid phyloseq components: sample_data, tax_table, phylo, or XStringSet. The tip labels of a phylo-object (tree) must match the OTU names of the otu_table, and similarly, the sequence names of an XStringSet object must match the OTU names of the otu_table.
+#merge_phyloseq - Can take any number of phyloseq objects and/or phyloseq components, and attempts to combine them into one larger phyloseq object. This is most-useful for adding separately-imported components to an already-created phyloseq object.
+
+
+##otu table----
+
+clean.otu.df<-as.data.frame(t(Menu_Combined2$reads))
+clean.otu.df<-rownames_to_column(clean.otu.df, var="id")
+
+
+##taxa table----
+
+clean.taxa.df<-as.data.frame(Menu_Combined2$motus)
+clean.taxa.df<-rownames_to_column(clean.taxa.df, var="id")
+taxa.df<-clean.taxa.df%>%
+  select(id, superkingdom, phylum, class, order,family,genus,species)
+
+
+##samples table----
+
+clean.samples.df<-as.data.frame(Menu_Combined2$samples)
+clean.samples.df<-rownames_to_column(clean.samples.df, var ="sample_id")
+
+clean.pcrs.df<-Menu_Combined2$pcrs
+clean.pcrs.df<-rownames_to_column(clean.pcrs.df, var="sample")
+
+
+#Before I can do this I need to either aggregate the PCRs again... or combine by PCR name instead of sample name
+
+
+samples.df<-full_join(clean.pcrs.df,clean.samples.df, by=c("sample_id","Site_Name","Microhabitat"))
+
+
+samples.df <- samples.df %>% 
+  tibble::column_to_rownames("sample")
+
+
+##make otu matrix----
+
+clean.otu.df<-column_to_rownames(clean.otu.df, var="id")
+clean.otu.mat<-as.matrix(clean.otu.df)
+
+#make taxa matrix
+taxa.df<-column_to_rownames(taxa.df, var="id")
+clean.taxa.mat<-as.matrix(taxa.df)
+
+##phy_tree ----
+
+newick<-read_tree(paste0("../09_Metabar_to_Phyloseq/BerryCrust_Cleaned Alignment Clustal Omega - MiFish_Cleaned Alignment FastTree Tree.newick"))
+
+
+##ASV sequences ----
+library(msa)
+Seqs <- readDNAStringSet(paste0("../09_Metabar_to_Phyloseq/Menu_Combined2.fasta"))
+
+
+#Put them together into a phyloseq object
+Menu_Combined2.ps<- phyloseq(otu_table(clean.otu.mat, taxa_are_rows = TRUE), 
+                             sample_data(samples.df), 
+                             tax_table(clean.taxa.mat),
+                             phy_tree(newick),
+                             refseq(Seqs))
+
+
+
+Menu_Combined2.ps
+
+
+saveRDS(Menu_Combined2.ps, file=paste("../09_Metabar_to_Phyloseq/Menu_combined2_Phyloseq.rds",sep=""))
+
 
 print(paste0("Finished creating a Phyloseq object out of Combined Metabarlist!"))
 

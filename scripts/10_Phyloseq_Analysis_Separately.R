@@ -21,11 +21,11 @@ library(ggsci)
 Primer<-"MiFish"
 
 
-#Import Metabarlist----
+#Import Phyloseq object----
 Menu.ps<-readRDS(file= paste("../09_Metabar_to_Phyloseq/",Primer,"_Phyloseq.rds", sep = ""))
 
 
-#Make phylogenetic tree visualization of cleaned ID'ed ASVs
+#Make phylogenetic tree visualization of cleaned ID'ed ASVs----
 head(phy_tree(Menu.ps)$node.label, 10)
 
 ntaxa(Menu.ps)
@@ -45,6 +45,81 @@ ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_Phylogenetic_Tree_Order_by_M
 plot_tree(Menu.ps, nodelabf=nodeplotboot(), color="Microhabitat", label.tips="species", shape="class",ladderize="left")+
     scale_color_lancet()
 ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_Phylogenetic_Tree_Classes_by_Microhabitat.jpg"))
+
+
+#calculate all the distance measures
+
+dist_methods <- unlist(distanceMethodList)
+print(dist_methods)
+# Remove the user-defined distance
+dist_methods = dist_methods[-which(dist_methods=="ANY")]
+#loop over each distance method offered in Phyloseq
+plist <- vector("list", length(dist_methods))
+names(plist) = dist_methods
+for( i in dist_methods ){
+  # Calculate distance matrix
+  iDist <- distance(Menu.ps, method=i)
+  # Calculate ordination
+  iMDS  <- ordinate(Menu.ps, "MDS", distance=iDist)
+  ## Make plot
+  # Don't carry over previous plot (if error, p will be blank)
+  p <- NULL
+  # Create plot, store as temp variable, p
+  p <- plot_ordination(Menu.ps, iMDS, color="Site_Name", shape="Microhabitat")
+  # Add title to each plot
+  p <- p + ggtitle(paste("MDS using distance method ", i, sep=""))
+  # Save the graphic to file.
+  plist[[i]] = p
+}
+# Warning messages:
+#   1: In UniFrac(physeq, ...) :
+#   Randomly assigning root as -- MiFish_0000952 -- in the phylogenetic tree in the data you provided.
+# 2: In UniFrac(physeq, weighted = TRUE, ...) :
+#   Randomly assigning root as -- MiFish_0001189 -- in the phylogenetic tree in the data you provided.
+#combine results, and shade according to Site_Name
+library("plyr")
+df = ldply(plist, function(x) x$data)
+names(df)[1] <- "distance"
+p = ggplot(df, aes(Axis.1, Axis.2, color=Site_Name, shape=Microhabitat))
+p = p + geom_point(size=3, alpha=0.5)
+p = p + facet_wrap(~distance, scales="free")
+p = p + ggtitle("MDS on various distance metrics for MiFish Menu dataset")
+p
+
+#l looks good, and unifrac... and jsd, and c looks the same as l.  l is Lande's index (Lande,1996 citation in Zotero) 
+#betadiver indices come from Measuring beta diversity for presence–absence data, Patricia Koleff, Kevin J. Gaston, Jack J. Lennon 2003
+
+print(plist[["l"]])
+print(plist[["unifrac"]])
+
+#combine results and shade according to Microhabitat
+df = ldply(plist, function(x) x$data)
+names(df)[1] <- "distance"
+p = ggplot(df, aes(Axis.1, Axis.2, color=Microhabitat, shape=Site_Name))
+p = p + geom_point(size=3, alpha=0.5)
+p = p + facet_wrap(~distance, scales="free")
+p = p + ggtitle("MDS on various distance metrics for MiFish Menu dataset")
+p
+
+
+#calculate phylogenetic distance between samples----
+
+unifrac_dist_Menu<-UniFrac(Menu.ps,weighted = FALSE)
+# Warning message:
+#   In UniFrac(Menu.ps, weighted = FALSE) :
+#   Randomly assigning root as -- MiFish_0000797 -- in the phylogenetic tree in the data you provided.
+
+
+#calculate phylogenetic distance between sites----
+
+##merge phyloseq object by Site_Name----
+Menu_site_merge.ps<-merge_samples(Menu.ps,group = "Site_Name")
+
+unifrac_dist_site_merged_Menu<-UniFrac(Menu_site_merge.ps,weighted = FALSE)
+# Warning message:
+#   In UniFrac(Menu_site_merge.ps, weighted = FALSE) :
+#   Randomly assigning root as -- MiFish_0000221 -- in the phylogenetic tree in the data you provided.
+# 
 
 
 #take just the top 50 ASVs
