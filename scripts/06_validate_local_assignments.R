@@ -7,7 +7,7 @@ library(prettyunits)
 library(taxonomizr)
 
 #set variables
-Primer ="MiFish"
+Primer ="MiFish" #Options MiFish or BerryCrust
 
  
 Local_advantage=TRUE #default is TRUE
@@ -21,31 +21,52 @@ Local_advantage=TRUE #default is TRUE
 prepareDatabase('accessionTaxa.sql')
 #accessed 4-26-24
 
+# Local copies of my data 
 
-#the final crustacean files I used
-BerryCrust_vsearch_lca_file <- "../05_vsearch_obitools_results/lca_crustaceans_Galapagos_top5_comprehensive_galapagos_results.txt"
+# #the final crustacean files I used
+# BerryCrust_vsearch_lca_file <- "../05_vsearch_obitools_results/lca_crustaceans_Galapagos_top5_comprehensive_galapagos_results.txt"
+# 
+# BerryCrust_vsearch_userout_file <- "../05_vsearch_obitools_results/userout_crustaceans_Galapagos_top5_comprehensive_galapagos_results.txt"
+# 
+# BerryCrust_obitools_results_file<-"../03_obitools_results/BerryCrust_Menu_95_named.tab"
+# 
+# BerryCrust_ASVs_file<-"../05_vsearch_obitools_results/upper_BerryCrust_Menu_95_named_cleared_tags.tab"
+# 
+# #the final fish files I used
+# #MiFish_vsearch_lca_file<-"../05_vsearch_obitools_results/no_prob_v2_lca_top5_comprehensive_galapagos_results.txt"
+# 
+# #MiFish_vsearch_userout_file<-"../05_vsearch_obitools_results/no_prob_v2_userout_top5_comprehensive_galapagos_results.txt"
+# 
+# MiFish_obitools_results_file<-"../03_obitools_results/MiFish_Menu_95_named.tab"
+# 
+# MiFish_ASVs_file<-"../05_vsearch_obitools_results/upper_MiFish_Menu_95_named_cleared_tags.tab"
+# 
+# #new fish files 5-1 with the database cleaned the same as the crustaceans file
+# MiFish_vsearch_lca_file<-"../05_vsearch_obitools_results/lca_MiFish5-1db_Galapagos_top5_comprehensive_galapagos_results.txt"
+# 
+# MiFish_vsearch_userout_file<-"../05_vsearch_obitools_results/userout_MiFish5-1db_Galapagos_top5_comprehensive_galapagos_results.txt"
+# 
 
-BerryCrust_vsearch_userout_file <- "../05_vsearch_obitools_results/userout_crustaceans_Galapagos_top5_comprehensive_galapagos_results.txt"
+#GitHub copy of my data (for release upon publication)
 
-BerryCrust_obitools_results_file<-"../03_obitools_results/BerryCrust_Menu_95_named.tab"
+#MiFish 
 
-BerryCrust_ASVs_file<-"../05_vsearch_obitools_results/upper_BerryCrust_Menu_95_named_cleared_tags.tab"
+MiFish_vsearch_userout_file<-"data/script_06_inputs/userout_MiFish5-1db_Galapagos_top5_comprehensive_galapagos_results.txt"
 
-#the final fish files I used
-#MiFish_vsearch_lca_file<-"../05_vsearch_obitools_results/no_prob_v2_lca_top5_comprehensive_galapagos_results.txt"
+MiFish_vsearch_lca_file<-"data/script_06_inputs/lca_MiFish5-1db_Galapagos_top5_comprehensive_galapagos_results.txt"
 
-#MiFish_vsearch_userout_file<-"../05_vsearch_obitools_results/no_prob_v2_userout_top5_comprehensive_galapagos_results.txt"
+MiFish_obitools_results_file<-"data/script_06_inputs/MiFish_Menu_95_named.tab"
 
-MiFish_obitools_results_file<-"../03_obitools_results/MiFish_Menu_95_named.tab"
+MiFish_ASVs_file<-"data/script_06_inputs/upper_MiFish_Menu_95_named_cleared_tags.tab"
 
-MiFish_ASVs_file<-"../05_vsearch_obitools_results/upper_MiFish_Menu_95_named_cleared_tags.tab"
+#BerryCrust
+BerryCrust_vsearch_lca_file <- "data/script_06_inputs/lca_crustaceans_Galapagos_top5_comprehensive_galapagos_results.txt"
 
-#new fish files 5-1 with the database cleaned the same as the crustaceans file
-MiFish_vsearch_lca_file<-"../05_vsearch_obitools_results/lca_MiFish5-1db_Galapagos_top5_comprehensive_galapagos_results.txt"
+BerryCrust_vsearch_userout_file <- "data/script_06_inputs/userout_crustaceans_Galapagos_top5_comprehensive_galapagos_results.txt"
 
-MiFish_vsearch_userout_file<-"../05_vsearch_obitools_results/userout_MiFish5-1db_Galapagos_top5_comprehensive_galapagos_results.txt"
+BerryCrust_obitools_results_file<-"data/script_06_inputs/BerryCrust_Menu_95_named.tab"
 
-
+BerryCrust_ASVs_file<-"data/script_06_inputs/upper_BerryCrust_Menu_95_named_cleared_tags.tab"
 
 #Load global obitools database results and local usearch database results ----
 
