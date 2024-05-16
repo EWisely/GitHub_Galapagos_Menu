@@ -2,6 +2,8 @@
 
 #Hi Kristina (and Eric and Renata!), 
 
+Here are my slides I made for our meeting: https://docs.google.com/presentation/d/1SH_PuTqrIKmlbS94F_BS7VBjIYiq1QZ9V5mEtxXeRzE/edit?usp=sharing
+
 I look forward to working together to make my script for validating eDNA taxonomic assignments a publishable product that people could use!  
 
 The problem: incomplete (and uncurated) reference DNA databases used for taxonomic assignment of query sequences from eDNA (water, soil, air) samples
