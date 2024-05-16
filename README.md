@@ -4,7 +4,7 @@
 
 I look forward to working together to make my script for validating eDNA taxonomic assignments a publishable product that people could use!  
 
-The problem: incomplete (and uncurated) reference databases
+The problem: incomplete (and uncurated) reference DNA databases used for taxonomic assignment of query sequences from eDNA (water, soil, air) samples
 
 #Global database (all vertebrates when assigning fish or all invertebrates when assigning crustacean sequences for example):
 Global_Pros <- c("likely to at least match relative when the local isn't sequenced", "most completeness possible", "unbiased (least bias anyway)")
