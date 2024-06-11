@@ -27,12 +27,15 @@ Primer<-"Menu_combined1" #Menu_combined =includes empty PCRs, Menu_combined1 =em
 #Import Phyloseq object----
 Menu.ps<-readRDS(file= paste("../09_Metabar_to_Phyloseq/",Primer,"_Phyloseq.rds", sep = ""))
 
+Menu.ps<- ps_filter(Menu.ps, Microhabitat != "passive mid bay")
 
 #make a network graph----
 ig <- make_network(Menu.ps, max.dist=0.9)
 plot_network(ig, Menu.ps,label = "Microhabitat")
 
 Menu.ps<-ps_filter(Menu.ps, Microhabitat != "passive mid bay")
+
+
 
 #Plot richness----
 plot_richness(Menu.ps, x="Site_Name","Microhabitat", measures=c("Shannon", "Simpson"), color="Site_Name")+

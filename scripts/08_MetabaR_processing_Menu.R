@@ -27,7 +27,7 @@ library(colorRamps)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"BerryCrust"
+Primer<-"MiFish"
 
 
 #Import Metabarlist----
@@ -276,69 +276,68 @@ table(Menu1$pcrs$seqdepth_ok[Menu1$pcrs$type=="sample"]) /
 #Compare replication of PCR replicates ----
 #They use this next function to compare the similarity of biological controls with the expectation they will be more similar to each other than to other samples.  
 
-# Subsetting the metabarlist
-Menu_sub <- subset_metabarlist(Menu, 
-                                     table = "pcrs", 
-                                     indices = Menu$pcrs$nb_reads>0 & (
-                                       is.na(Menu$pcrs$control_type) ))
-
-                                          #|Menu$pcrs$low_contamination_level=="TRUE"))
-
-# First visualization
-comp1 = pcr_within_between(Menu_sub)
-check_pcr_thresh(comp1)
-
-#cool, this looks good.  Now... for flagging not-well-replicated pcrs. 
-# Subsetting the metabarlist
-Menu1_sub <- subset_metabarlist(Menu1, 
-                                      table = "pcrs", 
-                                      indices = Menu1$pcrs$nb_reads>0 & (
-                                        is.na(Menu1$pcrs$control_type) ))
-
-                                          #|Menu1$pcrs$low_contamination_level=="TRUE"))
-
-
-# First visualization
-comp2 = pcr_within_between(Menu1_sub)
-check_pcr_thresh(comp2)
-
-#The distance between samples was much higher than within samples!
+# # Subsetting the metabarlist
+# Menu_sub <- subset_metabarlist(Menu, 
+#                                      table = "pcrs", 
+#                                      indices = Menu$pcrs$nb_reads>0 & (
+#                                        is.na(Menu$pcrs$control_type) ))
+# 
+#                                           #|Menu$pcrs$low_contamination_level=="TRUE"))
+# 
+# # First visualization
+# comp1 = pcr_within_between(Menu_sub)
+# check_pcr_thresh(comp1)
+# 
+# #cool, this looks good.  Now... for flagging not-well-replicated pcrs. 
+# # Subsetting the metabarlist
+# Menu1_sub <- subset_metabarlist(Menu1, 
+#                                       table = "pcrs", 
+#                                       indices = Menu1$pcrs$nb_reads>0 & (
+#                                         is.na(Menu1$pcrs$control_type) ))
+# 
+# 
+# 
+# # First visualization
+# comp2 = pcr_within_between(Menu1_sub)
+# check_pcr_thresh(comp2)
+# 
+# #The distance between samples was much higher than within samples!
 
 #However, when flagging for replication, it's best to use the unfiltered dataset. You lose fewer pcrs because there's more to compare to when including non-target species like fish in the case of BerryCrust primers.
 
-# Flagging
-Menu_sub <- pcrslayer(Menu_sub, output_col = "replicating_pcr", plot = F, thresh.method = "intersect")#,method = "pairwise")
-
-
-# Proportion of replicating pcrs (TRUE)
-table(Menu_sub$pcrs$replicating_pcr) /
-  nrow(Menu_sub$pcrs)
-#98.461538 % of Menu before removal of extraction contaminants etc.
-
-# Intersection with the sequencing depth criterion
-table(Menu_sub$pcrs$seqdepth_ok,
-      Menu_sub$pcrs$replicating_pcr)
-
-# Distinguish between pcrs obtained from samples from controls
-mds = check_pcr_repl(Menu_sub,
-                     groups = Menu_sub$pcrs$type,
-                     funcpcr = Menu_sub$pcrs$replicating_pcr)
-mds + labs(color = "pcr type") + scale_color_manual(values = c("gray", "cyan4"))
-
-#add results of this to the original Menu (and to Menu1)
-Menu$pcrs$replicating_pcr <- NA
-Menu$pcrs[rownames(Menu_sub$pcrs),"replicating_pcr"] <- Menu_sub$pcrs$replicating_pcr
-
-
-Menu1$pcrs$replicating_pcr <- NA
-Menu1$pcrs[rownames(Menu_sub$pcrs),"replicating_pcr"] <- Menu_sub$pcrs$replicating_pcr
-
-
-mds <- check_pcr_repl(Menu_sub, groups = Menu_sub$pcrs$rep)
-mds + labs(color = "PCR replicate")
-
-mds <- check_pcr_repl(Menu1_sub, groups = Menu1_sub$pcrs$rep)
-mds + labs(color = "PCR replicate")
+# # Flagging
+# Menu_sub <- pcrslayer(Menu_sub, output_col = "replicating_pcr", plot = F, thresh.method = "intersect")#,method = "pairwise")
+# 
+# 
+# # Proportion of replicating pcrs (TRUE)
+# table(Menu_sub$pcrs$replicating_pcr) /
+#   nrow(Menu_sub$pcrs)
+# #98.461538 % of Menu before removal of extraction contaminants etc.
+# 
+# # Intersection with the sequencing depth criterion
+# table(Menu_sub$pcrs$seqdepth_ok,
+#       Menu_sub$pcrs$replicating_pcr)
+# 
+# # Distinguish between pcrs obtained from samples from controls
+# mds = check_pcr_repl(Menu_sub,
+#                      groups = Menu_sub$pcrs$type,
+#                      funcpcr = Menu_sub$pcrs$replicating_pcr)
+# mds + labs(color = "pcr type") + scale_color_manual(values = c("gray", "cyan4"))
+# 
+# #add results of this to the original Menu (and to Menu1)
+# Menu$pcrs$replicating_pcr <- NA
+# Menu$pcrs[rownames(Menu_sub$pcrs),"replicating_pcr"] <- Menu_sub$pcrs$replicating_pcr
+# 
+# 
+# Menu1$pcrs$replicating_pcr <- NA
+# Menu1$pcrs[rownames(Menu_sub$pcrs),"replicating_pcr"] <- Menu_sub$pcrs$replicating_pcr
+# 
+# 
+# mds <- check_pcr_repl(Menu_sub, groups = Menu_sub$pcrs$rep)
+# mds + labs(color = "PCR replicate")
+# 
+# mds <- check_pcr_repl(Menu1_sub, groups = Menu1_sub$pcrs$rep)
+# mds + labs(color = "PCR replicate")
 
 #Summarize noise in the dataset----
 ##Motus artefacts pie chart----
@@ -381,8 +380,8 @@ ggsave(filename = paste0(Primer,"_output/",Primer,"_Menu_ASVs_artifacts_overview
 
 # Create a table of pcrs quality criteria
 # noise is identified as FALSE in Menu, the "!" transforms it to TRUE
-pcrs.qual <- !Menu$pcrs[,c("low_contamination_level", "seqdepth_ok", "replicating_pcr")]
-colnames(pcrs.qual) <- c("high_contamination_level", "low_seqdepth", "outliers")
+pcrs.qual <- !Menu$pcrs[,c("low_contamination_level", "seqdepth_ok")]
+colnames(pcrs.qual) <- c("high_contamination_level", "low_seqdepth")
 
 # Proportion of pcrs potentially artifactual (TRUE) based on the criteria used
 # excluding controls
@@ -479,7 +478,7 @@ summary_metabarlist(tmp)
 #Menu_clean!----
 Menu_clean <- subset_metabarlist(tmp, "pcrs",
                                      indices = rowSums(tmp$pcrs[,c("low_contamination_level",
-                                                                   "seqdepth_ok", "replicating_pcr")]) == 3 &
+                                                                   "seqdepth_ok")]) == 2 &
                                        tmp$pcrs$type == "sample")
 summary_metabarlist(Menu_clean)
 
@@ -776,3 +775,4 @@ summary_metabarlist(Menu_clean)
 saveRDS(Menu_clean_agg, file=paste("../07_lulu_metabar/",Primer,"_Menu_Clean_Metabarlist.rds",sep=""))
 
 print(paste0("Done processing ",Primer," with MetabaR, visualizations can be found in 07_lulu_metabar/ and phylogenetic diversity plots are in ",Primer,"_output/"))
+

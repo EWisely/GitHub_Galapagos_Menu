@@ -14,7 +14,7 @@ library(phyloseq)
 #library(ape)
 #library(phangorn)
 library(ggsci)
-
+library(vegan)
 '%ni%' <- Negate("%in%")
 
 #set variables
@@ -24,6 +24,7 @@ Primer<-"MiFish"
 #Import Phyloseq object----
 Menu.ps<-readRDS(file= paste("../09_Metabar_to_Phyloseq/",Primer,"_Phyloseq.rds", sep = ""))
 
+Menu.ps<- ps_filter(Menu.ps, Microhabitat != "passive mid bay")
 
 #Make phylogenetic tree visualization of cleaned ID'ed ASVs----
 head(phy_tree(Menu.ps)$node.label, 10)
@@ -58,7 +59,7 @@ plist <- vector("list", length(dist_methods))
 names(plist) = dist_methods
 for( i in dist_methods ){
   # Calculate distance matrix
-  iDist <- distance(Menu.ps, method=i)
+  iDist <- phyloseq::distance(Menu.ps, method=i)
   # Calculate ordination
   iMDS  <- ordinate(Menu.ps, "MDS", distance=iDist)
   ## Make plot
@@ -83,7 +84,7 @@ names(df)[1] <- "distance"
 p = ggplot(df, aes(Axis.1, Axis.2, color=Site_Name, shape=Microhabitat))
 p = p + geom_point(size=3, alpha=0.5)
 p = p + facet_wrap(~distance, scales="free")
-p = p + ggtitle("MDS on various distance metrics for MiFish Menu dataset")
+p = p + ggtitle("MDS on various distance metrics for BerryCrust Menu dataset")
 p
 
 #l looks good, and unifrac... and jsd, and c looks the same as l.  l is Lande's index (Lande,1996 citation in Zotero) 
@@ -260,7 +261,7 @@ sample_variables(Menu_species_merge.ps)
 rank_names(Menu_species_merge.ps)
 tax_table(Menu_species_merge.ps)
 
-saveRDS(Menu_species_merge.ps, file = paste0("../10_Phyloseq/",Primer,"/",Primer,"_specied_merged_phyloseq.rds"))
+saveRDS(Menu_species_merge.ps, file = paste0("../10_Phyloseq/",Primer,"/",Primer,"_species_merged_phyloseq.rds"))
 
 #Heatmaps----
 plot_heatmap(Menu_species_merge.ps.prop, method = "NMDS", distance = "bray", taxa.label = "genus" )
