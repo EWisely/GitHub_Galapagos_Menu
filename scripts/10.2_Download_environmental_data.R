@@ -30,8 +30,11 @@ biochem6of6<-terra::rast("../000_environmental_data/cmems_mod_glo_bgc-pft_anfc_0
 
 plot(biochem1of6["deptho"], col = hcl.colors(100), axes = TRUE)
 
+earlybiochem1of1<-stars::read_stars("../000_environmental_data/cmems_mod_glo_bgc_my_0.25_P1D-m_1718137929575.nc")
 earlybiochem1of1<-terra::rast("../000_environmental_data/cmems_mod_glo_bgc_my_0.25_P1D-m_1718137929575.nc")
 
+earlybiochem1of1@ptr$names
+earlybiochem1of1@ptr$time
 
 
 #SSTmap<-stars::read_stars("../000_environmental_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1718054723180.nc")
