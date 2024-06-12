@@ -31,10 +31,14 @@ biochem6of6<-terra::rast("../000_environmental_data/cmems_mod_glo_bgc-pft_anfc_0
 plot(biochem1of6["deptho"], col = hcl.colors(100), axes = TRUE)
 
 earlybiochem1of1<-stars::read_stars("../000_environmental_data/cmems_mod_glo_bgc_my_0.25_P1D-m_1718137929575.nc")
-earlybiochem1of1<-terra::rast("../000_environmental_data/cmems_mod_glo_bgc_my_0.25_P1D-m_1718137929575.nc")
+#chl, no3, nppv, o2, po4, si,
+earlychl<-earlybiochem1of1$chl
+str(earlychl)
 
-earlybiochem1of1@ptr$names
-earlybiochem1of1@ptr$time
+
+
+earlybiochem<-terra::rast("../000_environmental_data/cmems_mod_glo_bgc_my_0.25_P1D-m_1718137929575.nc")
+
 
 
 #SSTmap<-stars::read_stars("../000_environmental_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1718054723180.nc")
@@ -215,8 +219,192 @@ pts<-pts%>%
   dplyr::rename(depth=`depths$\`gebco_2023_n2.3839_s-2.9182_w-93.4343_e-85.3989\``, sst=`sstemps$sst`)
 
 #Add primary productivity
+
 plot(biochem3of6["nppv"])
 biochem3of6@ptr$time
 
-for (i in 1:nrow(pts)){pts$envlayer[i]=which(pts$unixdate[i]==biochem3of6@ptr$time)[1]}
+
+for (i in 1:nrow(pts)){pts$envlayer[i]=which(pts$unixdate[i]==biochem5of6@ptr$time)[1]}
+
+pts<-pts %>% dplyr::mutate(envlayer1 = replace_na(envlayer, 1))
+
+
+plot(earlybiochem["nppv"])
+plot(earlybiochem["si"])
+
+earlybiochem@ptr$time
+which(pts$unixdate[1]==earlybiochem@ptr$time)[1]
+
+
+#chl, no3, nppv, o2, po4, si,
+early_chl<-earlybiochem["chl"]
+late_chl<-biochem6of6["chl"]
+early_no3<-earlybiochem["no3"]
+late_no3<-biochem5of6["no3"]
+early_nppv<-earlybiochem["nppv"]
+late_nppv<-biochem3of6["nppv"]
+early_o2<-earlybiochem["o2"]
+late_o2<-biochem3of6["o2"]
+early_po4<-earlybiochem["po4"]
+late_po4<-biochem5of6["po4"]
+early_si<-earlybiochem["si"]
+late_si<-biochem5of6["si"]
+
+for (i in 1:nrow(pts)){pts$early_envlayer[i]=which(pts$unixdate[i]==earlybiochem@ptr$time)[1]}
+
+
+chltest = terra::extract(early_chl, 
+                         pts%>%
+                           select(DD_long, DD_lat,)%>%
+                           rename(lon=DD_long, lat=DD_lat),
+                         method="bilinear",
+                         layer=pts$early_envlayer[1])
+
+chltest
+
+no3test = terra::extract(early_no3, 
+                         pts%>%
+                           select(DD_long, DD_lat,)%>%
+                           rename(lon=DD_long, lat=DD_lat),
+                         method="bilinear",
+                         layer=pts$early_envlayer[1])
+
+no3test
+
+nppvtest = terra::extract(early_nppv, 
+                         pts%>%
+                           select(DD_long, DD_lat,)%>%
+                           rename(lon=DD_long, lat=DD_lat),
+                         method="bilinear",
+                         layer=pts$early_envlayer[1])
+
+nppvtest
+
+o2test = terra::extract(early_o2, 
+                         pts%>%
+                           select(DD_long, DD_lat,)%>%
+                           rename(lon=DD_long, lat=DD_lat),
+                         method="bilinear",
+                         layer=pts$early_envlayer[1])
+
+o2test
+
+po4test = terra::extract(early_po4, 
+                         pts%>%
+                           select(DD_long, DD_lat,)%>%
+                           rename(lon=DD_long, lat=DD_lat),
+                         method="bilinear",
+                         layer=pts$early_envlayer[1])
+
+po4test
+
+sitest = terra::extract(early_si, 
+                         pts%>%
+                           select(DD_long, DD_lat,)%>%
+                           rename(lon=DD_long, lat=DD_lat),
+                         method="bilinear",
+                         layer=pts$early_envlayer[1])
+
+sitest
+
+### add the later data for 2022-2023
+which(pts$unixdate[58]==late_si@ptr$time)[1]
+pts$envlayer[58][1]
+
+
+silate = terra::extract(late_si, 
+                        pts%>%
+                          select(DD_long, DD_lat)%>%
+                          rename(lon=DD_long, lat=DD_lat),
+                        method="bilinear",
+                        layer=pts$envlayer1[1])
+
+pts$envlayer[38][1]
+
+silate
+
+o2late = terra::extract(late_o2, 
+                        pts%>%
+                          select(DD_long, DD_lat)%>%
+                          rename(lon=DD_long, lat=DD_lat),
+                        method="bilinear",
+                        layer=pts$envlayer1[1])
+
+
+nppvlate = terra::extract(late_nppv, 
+                        pts%>%
+                          select(DD_long, DD_lat)%>%
+                          rename(lon=DD_long, lat=DD_lat),
+                        method="bilinear",
+                        layer=pts$envlayer1[1])
+
+
+po4late = terra::extract(late_po4, 
+                          pts%>%
+                            select(DD_long, DD_lat)%>%
+                            rename(lon=DD_long, lat=DD_lat),
+                          method="bilinear",
+                          layer=pts$envlayer1[1])
+
+no3late = terra::extract(late_no3, 
+                          pts%>%
+                            select(DD_long, DD_lat)%>%
+                            rename(lon=DD_long, lat=DD_lat),
+                          method="bilinear",
+                          layer=pts$envlayer1[1])
+
+chllate = terra::extract(late_chl, 
+                          pts%>%
+                            select(DD_long, DD_lat)%>%
+                            rename(lon=DD_long, lat=DD_lat),
+                          method="bilinear",
+                          layer=pts$envlayer1[1])
+
+
+
+
+
+#add to pts
+pts<-cbind(pts, sitest$value)
+pts<-cbind(pts, po4test$value)
+pts<-cbind(pts, o2test$value, nppvtest$value)
+pts<-cbind(pts, no3test$value, chltest$value)
+
+pts<-cbind(pts, silate$value, po4late$value, o2late$value, nppvlate$value, no3late$value,chllate$value)
+
+mutate(database=
+         if_else(is.na(Scientific_name)==TRUE,
+                 NA,
+                 database))
+pts1<-pts%>%
+  mutate(silicate=
+           if_else(envlayer1==1,
+                   `sitest$value`,
+                   `silate$value`),
+         oxygen=
+           if_else(envlayer1==1,
+                   `o2test$value`,
+                   `o2late$value`),
+         phosphate=
+           if_else(envlayer1==1,
+                   `po4test$value`,
+                   `po4late$value`),
+         primary_productivity=
+           if_else(envlayer1==1,
+                   `nppvtest$value`,
+                   `nppvlate$value`),
+         nitrate=
+           if_else(envlayer1==1,
+                   `no3test$value`,
+                   `no3late$value`),
+         chloride=
+           if_else(envlayer1==1,
+                   `chltest$value`,
+                   `chllate$value`))
+
+pts2<-pts1%>%
+  select(DD_long,DD_lat,Date.collected,sst,depth,silicate,oxygen,phosphate,primary_productivity,nitrate,chloride)
+
+write.csv(pts2, file = "../000_environmental_data/Menu_sampling_envvars.csv")
+
 

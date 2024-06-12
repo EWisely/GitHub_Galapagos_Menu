@@ -64,7 +64,16 @@ Hammerhead_samples.ps<-prune_taxa(taxa_sums(Hammerhead_samples.ps)>0,Hammerhead_
 
 new_sample_data<-cbind(data.frame(sample_data(Menu1.ps)))
 
-new_sample_data1<-new_sample_data%>%
+#Add environmental variables for each sample----
+envvars<-read.csv("../000_environmental_data/Menu_sampling_envvars.csv")
+
+envvars<-envvars%>%
+  rename(sample_id=X)
+
+new_sample_data<-new_sample_data%>%
+  select(sample_id,Site_Name,Microhabitat,Tide,Water_temp,Date.collected,DD_lat,DD_long,Salinity,Associated_Blood_Samples,Associated_Fecal_Samples)
+
+new_sample_data<-new_sample_data%>%
   mutate(hammerheads_detected=
            if_else(sample_id %in% Hammerhead_samples, 
                    1,
@@ -83,13 +92,33 @@ new_sample_data1<-new_sample_data%>%
                    0))
 
 
-new_sample_data1
+new_sample_data1<-left_join(new_sample_data,envvars)
+
+##center and scale continuous environmental variables----
+
+new_sample_data1<-new_sample_data1%>%
+  mutate(scaled_oxygen = scale(oxygen)[,1],
+         scaled_Water_temp= scale(Water_temp)[,1],
+         scaled_sst= scale(sst)[,1],
+         scaled_Salinity= scale(Salinity)[,1],
+         scaled_depth= scale(depth)[,1],
+         scaled_silicate= scale(silicate)[,1],
+         scaled_phosphate= scale(phosphate)[,1],
+         scaled_primaryprod= scale(primary_productivity)[,1],
+         scaled_nitrate= scale(nitrate)[,1],
+         scaled_chloride= scale(chloride)[,1])
+
+new_sample_data2<-column_to_rownames(new_sample_data1, var="sample_id")
+
 Shark_Menu.ps<-Menu1.ps
 
-sample_data(Shark_Menu.ps)<-new_sample_data1
+sample_data(Shark_Menu.ps)<-new_sample_data2
+
+sample_names(Shark_Menu.ps)
 
 Shark_Menu.ps@sam_data$carcharhinus_detected
 
+Shark_Menu.ps@sam_data$scaled_silicate
 
 ##Tax_fix to remove empty cells from taxonomy----
 Shark_Menu.taxfix.ps<-Shark_Menu.ps %>%
@@ -121,6 +150,9 @@ Shark_Menu_taxa_merge_species_named.ps<-tax_rename(Shark_Menu_taxa_merge_tax_fix
 
 Shark_Menu_taxa_merge_species_named.ps
 
+#This is the new full dataset!----
+
+saveRDS(Shark_Menu_taxa_merge_species_named.ps, file = "../10_Phyloseq/Shark_Menu_taxa_merge_species_named_ps.RDS")
 
 #Hellinger transform the read counts (square-root of percent abundances) ----
 # see: Proper environmental DNA metabarcoding data transformation reveals temporal stability of fish communities in a dendritic river system
@@ -255,11 +287,12 @@ Shark_Menu_taxa_merge_species_named_ALL_traits.hell.ps@tax_table
 
 #has all traits complete except DepthRangeShallow and DepthRangeDeep, I'll just delete those columns for the gllvm
 
+
 ##Remove samples that are missing temperature data----
 
-Shark_Menu_taxa_merge_species_named_ALL_traits.hell.ps <- Shark_Menu_taxa_merge_species_named_ALL_traits.hell.ps %>% ps_filter(Water_temp !="NA")
+Shark_Menu_taxa_merge_species_named_ALL_traits_temp.hell.ps <- Shark_Menu_taxa_merge_species_named_ALL_traits.hell.ps %>% ps_filter(Water_temp !="NA")
 
-Shark_Menu_taxa_merge_species_named_ALL_traits.hell.ps
+Shark_Menu_taxa_merge_species_named_ALL_traits_temp.hell.ps
 
 #try a gllvm using the traits phyloseq----
 #https://jenniniku.github.io/gllvm/articles/vignette3.html
@@ -301,7 +334,7 @@ menu_gllvm_data$abund
 menu_gllvm_data$x
 menu_gllvm_env_vars<-cbind(data.frame(sample_data(Shark_Menu_taxa_merge_species_named_ALL_traits.hell.ps)))
 menu_gllvm_env_vars<-menu_gllvm_env_vars%>%
-  select(Site_Name,Microhabitat,Tide, Water_temp)
+  select(Site_Name,Microhabitat,Tide, scaled_sst,scaled_depth,scaled_silicate,scaled_phosphate,scaled_primaryprod,scaled_nitrate,scaled_chloride,scaled_oxygen)
 menu_gllvm_env_vars
 
 menu_gllvm_data$x<-menu_gllvm_env_vars
@@ -355,12 +388,13 @@ plot.new()
 corrplot(cr, diag = FALSE, type = "lower", method = "square", tl.srt = 25)
 
 
-X <- menu_gllvm_data$x[,2:3]
+X <- menu_gllvm_data$x%>%
+  select(scaled_sst,scaled_primaryprod,scaled_phosphate,scaled_oxygen)
 fitpx1 <- gllvm(menu_gllvm_data$abund, X, family = poisson(), num.lv = 1)
 coefplot(fitpx1, mfrow = c(1,2), cex.ylab = 0.8)
-ggsave(filename = "../11_Vegan/Menu_combined2/Tide_gllvm_coeff.jpg")
+#ggsave(filename = "../11_Vegan/Menu_combined2/Tide_gllvm_coeff.jpg")
 coefplot(fitpx1, mfrow = c(2,3), cex.ylab = 0.8)
-ggsave(filename = "../11_Vegan/Menu_combined2/Microhabitat_and_Tide_gllvm_coeff.jpg")
+#ggsave(filename = "../11_Vegan/Menu_combined2/Microhabitat_and_Tide_gllvm_coeff.jpg")
 
 #the coefplots all crossed 0 so are not significant
 
@@ -382,7 +416,7 @@ fit_env <- gllvm(menu_gllvm_data$abund, menu_gllvm_data$x, family = poisson(), n
                  formula = ~Site_Name+Tide+Microhabitat, seed = 1234)
 dev.off()
 coefplot(fit_env, cex.ylab = 0.7, mfrow=c(2,3),mar = c(4,6,2,1))
-ggsave(filename = "../11_Vegan/GLLVM_species_microhabitat_coeffs.jpg")
+#ggsave(filename = "../11_Vegan/GLLVM_species_microhabitat_coeffs.jpg")
 
 # Fit GLLVM without environmental variables and 1 latent variable:
 fit1lv <- gllvm(menu_gllvm_data$abund, family = poisson(), num.lv = 1, seed = 1234)
@@ -449,8 +483,9 @@ write_delim(landes_permanova, file = "../11_Vegan/Menu_combined2/landes_permanov
 landes_dist_matrix <- phyloseq::distance(Shark_Menu_taxa_merge_species_named.hell.ps, method ="l")
 
 set.seed(200)
-vegan::adonis2(landes_dist_matrix ~ phyloseq::sample_data(Shark_Menu_taxa_merge_species_named.hell.ps)$Site_Name+Shark_Menu_taxa_merge_species_named.hell.ps@sam_data$Microhabitat+Shark_Menu_taxa_merge_species_named.hell.ps@sam_data$Tide)
-#Site p=0.001, Microhabitat p=0.004, Tide 0.001
+vegan::adonis2(landes_dist_matrix ~ phyloseq::sample_data(Shark_Menu_taxa_merge_species_named.hell.ps)$Site_Name+Shark_Menu_taxa_merge_species_named.hell.ps@sam_data$Microhabitat+Shark_Menu_taxa_merge_species_named.hell.ps@sam_data$Tide
++Shark_Menu_taxa_merge_species_named.hell.ps@sam_data$scaled_sst)
+#Site p=0.001, Microhabitat p=0.019, Tide 0.014, sst=0.006
 
 ###Just site_name----
 set.seed(2)
@@ -467,7 +502,7 @@ pairwise.adonis(landes_dist_matrix, phyloseq::sample_data(Shark_Menu_taxa_merge_
 
 set.seed(2)
 microhabitat_landes_pairwise_adonis<-pairwise.adonis(landes_dist_matrix, phyloseq::sample_data(Shark_Menu_taxa_merge_species_named.hell.ps)$Microhabitat)
-write_delim(landes_pairwise_adonis, "../11_Vegan/Menu_combined2/microhabitat_landes_pairwise_adonis_results.txt")
+write_delim(microhabitat_landes_pairwise_adonis, "../11_Vegan/Menu_combined2/microhabitat_landes_pairwise_adonis_results.txt")
 
 #mangroves vs. beach were significant at and middle of bay vs beach was significant
 
@@ -483,13 +518,13 @@ hhsite_landes_pairwise_adonis<-pairwise.adonis(landes_dist_matrix, phyloseq::sam
 write_delim(hhsite_landes_pairwise_adonis, "../11_Vegan/Menu_combined2/hhsite_landes_pairwise_adonis_results.txt")
 #significant 0.001
 
-set.seed(2)
+set.seed(200)
 pairwise.adonis(landes_dist_matrix, phyloseq::sample_data(Shark_Menu_taxa_merge_species_named_traits_rm_hh.hell.ps)$hammerheads_detected)
 
-set.seed(2)
+set.seed(200)
 hhsite_landes_pairwise_adonis<-pairwise.adonis(landes_dist_matrix, phyloseq::sample_data(Shark_Menu_taxa_merge_species_named_traits_rm_hh.hell.ps)$hammerheads_detected)
 write_delim(hhsite_landes_pairwise_adonis, "../11_Vegan/Menu_combined2/hhdetected_landes_pairwise_adonis_results.txt")
-#also significant
+#not significant
 
 cca_ps_rm_hh <- ordinate( physeq = Shark_Menu_taxa_merge_species_named_traits_rm_hh.hell.ps,  method = "CCA", formula = ~ Microhabitat+Tide+hammerhead_site+hammerheads_detected + Condition(Site_Name), scale=TRUE)
 
