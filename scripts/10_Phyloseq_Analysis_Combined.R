@@ -431,7 +431,7 @@ pseq<-Menu_taxa_merge.ps %>%
 # pseq <- pseq %>%
 #   phyloseq_validate()
 # 
-# ord_explore(pseq) 
+#ord_explore(pseq) 
 # 
 # #code from the above program... 
 # 
@@ -502,7 +502,106 @@ pseq<-Menu_taxa_merge.ps %>%
 # print(paste0("Phyloseq exploratory visualizations for this run can be found in ../10_Phyloseq/",Primer,"/"))
 # 
 
+pseq<-Shark_Menu_taxa_merge_species_named_traits.eDNAindex.ps
 
+ord_explore(pseq) 
+
+#NMDS with landes distance (eDNAindex Menu) and ellipses
+pseq%>%
+  tax_transform(rank = "species", trans = "compositional") %>%
+  dist_calc(dist = "l") %>%
+  ord_calc(
+    method = "auto"
+  ) %>% 
+  ord_plot(
+    axes = c(1, 2),
+    colour = "Site_Name", fill = "Site_Name",
+    shape = "Microhabitat", alpha = 0.9,
+    size = 2
+  ) + 
+  scale_shape_girafe_filled() +
+  ggplot2::stat_ellipse(
+    ggplot2::aes(colour = Site_Name)
+  )
+
+#PCA with species arrows by site and microhabitat eDNA index, no distance transformation
+your_phyloseq %>%
+  tax_transform(rank = "species", trans = "identity") %>%
+  ord_calc(
+    method = "PCA"
+  ) %>% 
+  ord_plot(
+    axes = c(1, 2),
+    plot_taxa = 1:4,
+    colour = "Site_Name", fill = "Site_Name",
+    shape = "Microhabitat", alpha = 0.9,
+    size = 2
+  ) + 
+  scale_shape_girafe_filled()
+
+
+
+
+#PCoA compositional transformation dist=bray with ellipses
+pseq %>%
+  tax_transform(rank = "genus", trans = "compositional") %>%
+  dist_calc(dist = "l") %>%
+  ord_calc(
+    method = "auto"
+  ) %>% 
+  ord_plot(
+    axes = c(1, 2),
+    colour = "Site_Name", fill = "Site_Name",
+    shape = "Microhabitat", 
+    alpha = 0.5,
+    size = 2
+  ) + 
+  scale_shape_girafe_filled() +
+  ggplot2::stat_ellipse(
+    ggplot2::aes(colour = Site_Name)
+  )+
+  scale_color_flatui()
+
+ggsave(paste0("../10_Phyloseq/Lande's_Final_Menu_compositional_PcoA_with_ellipses.jpg"))
+
+
+
+#PCA of compositional proportion of prey with arrows
+
+pseq %>%
+  tax_transform(rank = "species", trans = "compositional") %>%
+  ord_calc(
+    method = "PCA"
+  ) %>% 
+  ord_plot(
+    axes = c(1, 2),
+    plot_taxa = 1:5,
+    colour = "Microhabitat", fill = "Microhabitat",
+    shape = "circle", alpha = 0.7,
+    size = 2
+  )+
+  scale_color_locuszoom()
+
+#ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_PCA_with_arrows_by_microhabitat.jpg"))
+
+#PCA of binary transformed (presence/absence) prey species.
+pseq %>%
+  tax_transform(rank = "species", trans = "binary") %>%
+  ord_calc(
+    method = "auto"
+  ) %>% 
+  ord_plot(
+    axes = c(1, 2),
+    colour = "Site_Name", fill = "Site_Name",
+    shape = "circle", alpha = 0.5,
+    size = 2
+  ) +
+  ggplot2::stat_ellipse(
+    ggplot2::aes(colour = Site_Name)
+  )+
+  scale_color_flatui()
+
+#ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_presence_absence_PCA_with_ellipses.jpg"))
 
 
 

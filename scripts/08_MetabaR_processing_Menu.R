@@ -27,7 +27,7 @@ library(colorRamps)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"MiFish"
+Primer<-"BerryCrust"
 
 
 #Import Metabarlist----
@@ -650,46 +650,92 @@ ggsave(paste0(Primer,"_output/",Primer,"_Hill_rarefaction_cleaned_samples_by_Sit
 #Menu_clean_agg$motus<-Menu_clean_agg$motus%>%
 #  mutate(Species=str_split_i(pattern = " ",species,i = -1))
 
+menu_clean_agg_nonpassive<-subset_metabarlist(Menu_clean_agg,
+                                              table = "samples",
+                                              indices=!grepl("passive", Menu_clean_agg$samples$Microhabitat))
+
+#check for empty motus
+if(sum(colSums(menu_clean_agg_nonpassive$reads)==0)>0){print("empty motus present")}
+if(sum(rowSums(menu_clean_agg_nonpassive$reads)==0)>0){print("empty pcrs present")}
+
+#recount reads now that they're cleaned
+menu_clean_agg_nonpassive$motus$count = colSums(menu_clean_agg_nonpassive$reads)
+menu_clean_agg_nonpassive$pcrs$nb_reads_postmetabaR = rowSums(menu_clean_agg_nonpassive$reads)
+menu_clean_agg_nonpassive$pcrs$nb_motus_postmetabaR = rowSums(ifelse(menu_clean_agg_nonpassive$reads>0, T, F))
+
+
+#subset the metabarlist to all PCRs with more than 0 reads
+menu_clean_agg_nonpassive1 <- subset_metabarlist(menu_clean_agg_nonpassive, table = "pcrs",
+                                  indices = rowSums(menu_clean_agg_nonpassive$reads)>0)
+
+if(sum(colSums(menu_clean_agg_nonpassive1$reads)==0)>0){print("empty motus present")}
+if(sum(rowSums(menu_clean_agg_nonpassive1$reads)==0)>0){print("empty pcrs present")}
+menu_clean_agg_nonpassive1$motus$count = colSums(menu_clean_agg_nonpassive1$reads)
+
+
+summary_metabarlist(Menu_clean_agg)
+
+
+summary_metabarlist(menu_clean_agg_nonpassive1)
+
+
+
+
+
 taxo.col <- c(
   "superkingdom", "phylum", "class",
   "order", "family", "genus","species")
 
-eukaryota <- subset_metabarlist(Menu_clean_agg,
+eukaryota <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                    table = "motus",
                                    indices = grepl("Eukaryota", 
-                                                   Menu_clean_agg$motus$superkingdom))
+                                                   menu_clean_agg_nonpassive1$motus$superkingdom))
 
-ggtaxplot(eukaryota, taxo.col)
+taxo.col1 <- c("phylum", "class",
+  "order", "family", "genus","species")
 
-ggsave(paste0(Primer,"_output/",Primer,"_phylogenetic_diversity_Menu_Eukaryota.jpg"))
 
 ####BerryCrust section----
 if (Primer=="BerryCrust") {
 
-  malacostraca <- subset_metabarlist(Menu_clean_agg,
+  malacostraca <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                  table = "motus",
                                  indices = grepl("Malacostraca", 
-                                    Menu_clean_agg$motus$class))
+                                                 menu_clean_agg_nonpassive1$motus$class))
 
-  ggtaxplot(malacostraca, taxo.col)
+  taxo.col2 <- c("class",
+                 "order", "family", "genus","species")
+  ggtaxplot(malacostraca, taxo.col2)
 
   ggsave("BerryCrust_output/BerryCrust_phylogenetic_diversity_Menu_Malacostraca.jpg")
   
-  decapoda <- subset_metabarlist(Menu_clean_agg,
+  decapoda <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                      table = "motus",
                                      indices = grepl("Decapoda", 
-                                                     Menu_clean_agg$motus$order))
+                                                     menu_clean_agg_nonpassive1$motus$order))
   
   ggtaxplot(decapoda, taxo.col)
   
   ggsave("BerryCrust_output/BerryCrust_phylogenetic_diversity_Menu_Decapoda.jpg")
   
-  arthropoda <- subset_metabarlist(Menu_clean_agg,
+  arthropoda <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                  table = "motus",
                                  indices = grepl("Arthropoda", 
-                                                 Menu_clean_agg$motus$phylum))
+                                                 menu_clean_agg_nonpassive1$motus$phylum))
   
-  ggtaxplot(arthropoda, taxo.col)
+  ggtaxplot(arthropoda, taxo.col1)
+  
+  pgrapsussocius<-subset_metabarlist(menu_clean_agg_nonpassive1,
+                                     table = "motus",
+                                     indices = grepl("Pachygrapsus socius", 
+                                                     menu_clean_agg_nonpassive1$motus$species))
+  pgrapsussocius_readcounts<-sum(pgrapsussocius$reads)
+  pgrapsussocius_readcounts
+  BerryCrust_readcounts<-sum(menu_clean_agg_nonpassive1$reads)
+  BerryCrust_readcounts
+  
+  #percent reads assigned to Pachygrapsus socius
+  pgrapsussocius_readcounts/BerryCrust_readcounts
 
   arthropoda_hammerhead_nurseries <- subset_metabarlist(arthropoda,
                                                         table = "samples",
@@ -713,18 +759,38 @@ if (Primer=="BerryCrust") {
 ###MiFish section ----
 if (Primer=="MiFish"){
 
-  chondrichthyes <- subset_metabarlist(Menu_clean_agg,
+  MiFish_read_counts<-sum(menu_clean_agg_nonpassive1$reads)
+  MiFish_read_counts
+  Mugil_metabarlist<-subset_metabarlist(menu_clean_agg_nonpassive1,table = "motus",indices = grepl("Mugil",menu_clean_agg_nonpassive1$motus$genus))
+  Mugil_read_counts<-sum(Mugil_metabarlist$reads)
+  Mugil_read_counts
+  
+  Mugil_read_counts/MiFish_read_counts
+  
+  chordata<-subset_metabarlist(menu_clean_agg_nonpassive1,
+                               table = "motus",
+                               indices = grepl("Chordata",
+                                               menu_clean_agg_nonpassive1$motus$phylum))
+  
+  ggtaxplot(chordata, taxo.col1)
+  
+  ggsave(paste0(Primer,"_output/",Primer,"_phylogenetic_diversity_Menu_Eukaryota.jpg"))
+  
+  
+  summary_metabarlist(chordata)
+  
+  chondrichthyes <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                  table = "motus",
                                  indices = grepl("Chondrichthyes", 
-                                                 Menu_clean_agg$motus$class))
+                                                 menu_clean_agg_nonpassive1$motus$class))
   
   ggtaxplot(chondrichthyes, taxo.col)
   
   ggsave("MiFish_output/MiFish_phylogenetic_diversity_Menu_Chondrichthyes.jpg")
   
-  hammerhead_nurseries <- subset_metabarlist(Menu_clean_agg,
+  hammerhead_nurseries <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                                         table = "samples",
-                                                        indices = (Menu_clean_agg$samples$Site_Name == "Puerto Grande" |Menu_clean_agg$samples$Site_Name == "Cartago Bay, Isabela"))
+                                                        indices = (menu_clean_agg_nonpassive1$samples$Site_Name == "Puerto Grande" |menu_clean_agg_nonpassive1$samples$Site_Name == "Cartago Bay, Isabela"))
  
    # Compute the number of reads per pcr
   hammerhead_nurseries$pcrs$nb_reads <- rowSums(hammerhead_nurseries$reads)
@@ -742,10 +808,10 @@ if (Primer=="MiFish"){
   ggsave("MiFish_output/Menu_hammerhead_nurseries.jpg")
   
   
-  non_hammerhead_nurseries <- subset_metabarlist(Menu_clean_agg,
+  non_hammerhead_nurseries <- subset_metabarlist(menu_clean_agg_nonpassive1,
                                                             table = "samples",
-                                                            indices = (Menu_clean_agg$samples$Site_Name != "Puerto Grande" &
-                                                                         Menu_clean_agg$samples$Site_Name != "Cartago Bay, Isabela"))
+                                                            indices = (menu_clean_agg_nonpassive1$samples$Site_Name != "Puerto Grande" &
+                                                                         menu_clean_agg_nonpassive1$samples$Site_Name != "Cartago Bay, Isabela"))
   
   ggtaxplot(non_hammerhead_nurseries, taxo.col)
   
@@ -771,6 +837,7 @@ write.csv(Menu_clean$samples, paste("../07_lulu_metabar/",Primer,"_Metabar_clean
 summary_metabarlist(Menu_clean_agg)
 summary_metabarlist(Menu_clean1)
 summary_metabarlist(Menu_clean)
+summary_metabarlist((menu_clean_agg_nonpassive1))
 
 saveRDS(Menu_clean_agg, file=paste("../07_lulu_metabar/",Primer,"_Menu_Clean_Metabarlist.rds",sep=""))
 

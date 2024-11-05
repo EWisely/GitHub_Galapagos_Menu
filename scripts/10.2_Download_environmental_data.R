@@ -137,7 +137,7 @@ pts1
 v <- vect(cbind(pts1), crs="+proj=longlat")
 radius <- terra::buffer(v, 10)
 
-
+write.csv(pts1, "../000_environmental_data/points.csv")
 
 #for each observation:
 #get the appropriate raster layer for each unixdate
@@ -200,9 +200,11 @@ pts<-cbind(pts, sstemps$sst)
 #Load bathymetry raster for the whole Galapagos region downloaded from GEBCO: https://www.gebco.net/data_and_products/gridded_bathymetry_data/gebco_2019/grid_terms_of_use.html
 
 bathy <- terra::rast("../../../Physalia_GIS_in_R_2023/course_materials/practicals/data/bathymetry_galapagos/GEBCO_30_Oct_2023_672896985ee1/gebco_2023_n2.3839_s-2.9182_w-93.4343_e-85.3989.tif")
+par(mar=c(0,0,0,0))
 plot(bathy, col = hcl.colors(100, "blues"))
 plot(radius, add=TRUE)
 bathy
+
 
 #get depths under points
 

@@ -18,7 +18,7 @@ library(ape)
 '%ni%' <- Negate("%in%")
 
 #set variables
-Primer<-"MiFish"
+Primer<-"BerryCrust"
 
 
 #Import Metabarlist----
@@ -125,3 +125,14 @@ saveRDS(Menu.ps, file=paste("../09_Metabar_to_Phyloseq/",Primer,"_Phyloseq.rds",
 
 print(paste0("Finished creating a Phyloseq object out of ",Primer," Metabarlist!"))
 
+
+
+# #Install fishtree to place fish on a better resolved phylogeny
+# #install.packages("fishtree")
+# library(fishtree)
+# tax <- fishtree_taxonomy()
+# head(tax)
+# tax
+# library(ape)
+# phy <- fishtree_phylogeny(rank = "Actinopteri")
+# phy

@@ -15,6 +15,7 @@ library(phyloseq)
 #library(phangorn)
 library(ggsci)
 library(vegan)
+library(microViz)
 '%ni%' <- Negate("%in%")
 
 #set variables
@@ -276,6 +277,35 @@ plot_richness(Menu_species_merge.ps, x="Water_temp", color="Microhabitat", measu
 
 
 ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_alpha_diversity_by water_temp_and_Microhabitat.jpg"))
+
+plot_richness(Menu_species_merge.ps, x="Water_temp", color="Site_Name", measures=c("Simpson"))+
+  scale_color_locuszoom()+
+  scale_shape_girafe_filled() +
+  ggplot2::stat_smooth(
+    ggplot2::aes(colour = Site_Name))
+
+
+ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_alpha_diversity_by water_temp_and_Site_Name.jpg"))
+
+plot_richness(Menu_species_merge.ps, x="Water_temp", color="type", measures=c("Observed"))+
+  scale_color_locuszoom()+
+  scale_shape_girafe_filled() +
+  ggplot2::stat_smooth(
+    ggplot2::aes(colour = type))
+
+
+ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_alpha_diversity_by water_temp_and_sampletype.jpg"))
+
+sample_data(Menu_species_merge.ps)
+
+plot_richness(Menu_species_merge.ps, x="Water_temp", color="", measures=c("Observed"))+
+  scale_color_locuszoom()+
+  scale_shape_girafe_filled() +
+  ggplot2::stat_smooth(
+    ggplot2::aes(colour = type))
+
+
+ggsave(paste0("../10_Phyloseq/",Primer,"/",Primer,"_alpha_diversity_by water_temp_and_sampletype.jpg"))
 
 plot_richness(Menu_species_merge.ps, x="Site_Name", color="Site_Name", measures = c("Observed","Shannon","Simpson","InvSimpson","Chao1"))+ 
   geom_boxplot()+

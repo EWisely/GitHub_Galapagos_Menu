@@ -32,13 +32,13 @@ obis_galfish<-checklist(c("Agnatha", "Chondrichthyes", "Osteichthyes"),geometry 
 
 #### Pull out only the marine fish species list for the local database
 obis_galfish_species<-obis_galfish%>%
-  filter(taxonRank=="Species" , is_terrestrial==FALSE)%>%
+  filter(taxonRank=="Species" , is_freshwater==FALSE, is_terrestrial==FALSE)%>%
   select(scientificName)%>%
   rename(Species=scientificName)
 
 #### Get the local marine fish taxa list for checking the results against
 obis_galfish_taxa<-obis_galfish%>%
-  filter(is_terrestrial==FALSE)%>%
+  filter(is_freshwater==FALSE, is_terrestrial==FALSE)%>%
   select(scientificName)%>%
   rename(Taxa=scientificName)
 
@@ -47,7 +47,7 @@ obis_tepfish<-checklist(c("Agnatha", "Chondrichthyes", "Osteichthyes"),geometry 
 
 #### Get the regional marine fish taxa list for checking the results against
 obis_tepfish_taxa<-obis_tepfish%>%
-  filter(is_terrestrial==FALSE)%>%
+  filter(is_freshwater==FALSE, is_terrestrial==FALSE)%>%
   select(scientificName)%>%
   rename(Taxa=scientificName)
 
@@ -56,13 +56,13 @@ obis_galcrust<-checklist("Crustacea",geometry = "POLYGON ((-93.339844 -3.162456,
 
 #### Pull out only the marine crustacean species list for the local database
 obis_galcrust_species<-obis_galcrust%>%
-  filter(taxonRank=="Species" , is_marine==TRUE)%>%
+  filter(taxonRank=="Species" ,is_freshwater==FALSE, is_terrestrial==FALSE)%>%
   select(scientificName)%>%
   rename(Species=scientificName)
 
 #### Get the local marine crustacean taxa list for checking the results against
 obis_galcrust_taxa<-obis_galcrust%>%
-  filter(is_terrestrial==FALSE)%>%
+  filter(is_freshwater==FALSE, is_terrestrial==FALSE)%>%
   select(scientificName)%>%
   rename(Taxa=scientificName)
 
@@ -71,7 +71,7 @@ obis_tepcrust<-checklist("Crustacea",geometry = "POLYGON ((-117.421875 31.952162
 
 #### Get the regional marine crustacean taxa list for checking the results against
 obis_tepcrust_taxa<-obis_tepcrust%>%
-  filter(is_terrestrial==FALSE)%>%
+  filter(is_freshwater==FALSE, is_terrestrial==FALSE)%>%
   select(scientificName)%>%
   rename(Taxa=scientificName)
 
@@ -530,7 +530,7 @@ Species_obis_gbif_darwin_galfish$Species<- Species_obis_gbif_darwin_galfish$Spec
 write_delim(Species_obis_gbif_darwin_galfish, "../custom_db/comprehensive_galapagos_fish_list.txt", delim = '\t', col_names = FALSE)
 nrow(Species_obis_gbif_darwin_galfish)
 #1147
-
+View(Species_obis_gbif_darwin_galfish)
 
 ##Write Crustaceans list to a txt file to use as CRABS input----
 

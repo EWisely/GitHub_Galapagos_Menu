@@ -559,14 +559,14 @@ lca_global_v_local_assigned<-nrow(best_ID_combined[best_ID_combined$database == 
 lca_global_v_local_assigned
 #45
 
-globally_assigned<-nrow(best_ID_combined[best_ID_combined$database == 'global'& is.na(best_ID_combined$preferred_name) ==FALSE, ])
+globally_assigned<-nrow(best_ID_combined[is.na(best_ID_combined$preferred_name) ==FALSE& best_ID_combined$preferred_name==best_ID_combined$SCIENTIFIC_NAME, ])
 
 globally_assigned
 #357
 
 
 #count the number of times the local database was used for the preferred assignment
-locally_assigned<-nrow(best_ID_combined[best_ID_combined$database == 'local'& is.na(best_ID_combined$preferred_name) ==FALSE, ])
+locally_assigned<-nrow(best_ID_combined[is.na(best_ID_combined$preferred_name) ==FALSE& best_ID_combined$preferred_name==best_ID_combined$lca_name, ])
 locally_assigned
 
 #143
@@ -585,6 +585,10 @@ global_to_local_assigment<-nrow(best_ID_combined[best_ID_combined$database == 'l
 global_to_local_assigment
 #139 taxa updated from existing global assignments
 
+
+#number of global taxa that got updated with local checklist
+global_to_local_relative<-nrow(best_ID_combined[best_ID_combined$preferred_name == best_ID_combined$local_relative & best_ID_combined$preferred_name!= best_ID_combined$SCIENTIFIC_NAME &is.na(best_ID_combined$preferred_name)==FALSE, ])
+global_to_local_relative
 
 
 
@@ -638,9 +642,33 @@ final_taxa<-final_taxa%>%
 class(final_taxa)
 write.csv(final_taxa,paste0("../06_local_vs_global_results/",Primer,"_Menu_ready_for_MetabaR.csv"))
 
-
+write.csv(best_ID_combined,paste0("../06_local_vs_global_results/",Primer,"_best_ID_combined.csv"))
 
 print(paste0("Finished cross validating taxonomic assignments for ",Primer," with Local advantage set to ",Local_advantage))
 
 
+
+post_summary_best_ID_combined<-best_ID_combined%>%
+  summarise(n_global_v_checklist=n_distinct(local_relative),
+            n_combined_IDed_taxa= n_distinct(preferred_name))
+            
+  
+post_summary_best_ID_combined
+globalvlocal<-best_ID_combined%>%
+  filter(database=="lca_global_v_local")
+summaryglobalvlocal<-globalvlocal%>%
+  summarise(n_global_v_local= n_distinct(preferred_name))
+summaryglobalvlocal
+
+finallocal<-best_ID_combined%>%
+  filter(preferred_name==lca_name)
+summaryfinallocal<-finallocal%>%
+  summarise(n_finallocal= n_distinct(preferred_name))
+summaryfinallocal
+
+finalglobal<-best_ID_combined%>%
+  filter(preferred_name==SCIENTIFIC_NAME)
+summaryfinalglobal<-finalglobal%>%
+  summarise(n_finalglobal= n_distinct(preferred_name))
+summaryfinalglobal
 
