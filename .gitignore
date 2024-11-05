@@ -11,4 +11,5 @@ lulu.log*
 BerryCrust_output/*
 MiFish_output/*
 .RData 2
-
+trees/*
+vis/*
